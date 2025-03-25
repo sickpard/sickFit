@@ -22,9 +22,4 @@ class ExerciseSet extends Model
     {
         return $this->belongsTo(Exercise::class);
     }
-
-    public function getCreatedAtFormattedAttribute()
-{
-    return $this->created_at ? $this->created_at->format('d/m/Y') : 'N/A';
-}
 }
