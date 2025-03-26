@@ -1,0 +1,4 @@
+il model serve a collegarsi alla tabella, solo a questo, non dovrebbe fare altro
+
+si crea così:
+    php artisan make:model Workout

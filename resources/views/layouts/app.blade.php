@@ -4,38 +4,55 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'My Laravel App')</title>
+    <title>@yield('title', 'GYMTRACK')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    {{-- @livewireStyles --}}
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100">
-    <!-- Header -->
-    <header class="bg-gray-800 text-white py-4">
-        <div class="container mx-auto px-4 flex justify-between items-center">
-            <div class="flex items-center">
-                <a href="/" class="text-2xl font-bold">GYM<span class="text-blue-400">TRACK</span></a>
+<body class="bg-gray-50">
+    <!-- Header Semplificato -->
+    <header class="bg-indigo-600 text-white shadow-md">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <a href="{{ url('/') }}" class="text-2xl font-bold tracking-tight">
+                    GYM<span class="text-amber-300">TRACK</span>
+                </a>
+                
+                <nav class="hidden md:flex space-x-6">
+                    <a href="{{ route('workouts.index') }}" 
+                       class="px-3 py-1 rounded hover:bg-indigo-500 transition {{ request()->routeIs('workouts.*') ? 'bg-indigo-700' : '' }}">
+                       Workout
+                    </a>
+                    
+                    {{-- Solo se hai bisogno degli esercizi --}}
+                    {{-- @if(Route::has('exercises.index'))
+                    <a href="{{ route('exercises.index') }}" 
+                       class="px-3 py-1 rounded hover:bg-indigo-500 transition {{ request()->routeIs('exercises.*') ? 'bg-indigo-700' : '' }}">
+                       Esercizi
+                    </a>
+                    @endif --}}
+                </nav>
             </div>
-            
-            <nav class="space-x-6">
-                <a href="{{ route('exercises.index') }}" class="hover:text-blue-400">Esercizi</a>
-                <a href="{{ route('exercise-sets.index') }}" class="hover:text-blue-400">Serie</a>
-                <a href="#" class="hover:text-blue-400">Profilo</a>
-            </nav>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8">
-        @yield('content') <!-- Qui verrà inserito il contenuto delle pagine -->
+    <main class="container mx-auto px-4 py-6 min-h-screen">
+        <!-- Messaggi Flash -->
+        @if(session('success'))
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
+            <p>{{ session('success') }}</p>
+        </div>
+        @endif
+
+        @yield('content')
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-4 mt-8">
-        <div class="container mx-auto px-4 text-center">
-            &copy; {{ date('Y') }} GYMTRACK. Tutti i diritti riservati.
+    <!-- Footer Base -->
+    <footer class="bg-gray-800 text-white py-4">
+        <div class="container mx-auto px-4 text-center text-sm">
+            &copy; {{ date('Y') }} GYMTRACK - Tutti i diritti riservati
         </div>
     </footer>
-
-    {{-- @livewireScripts --}}
 </body>
 </html>
