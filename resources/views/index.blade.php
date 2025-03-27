@@ -1,30 +1,17 @@
 <!-- resources/views/welcome.blade.php -->
 @extends('layouts.app')
 
-@section('title', 'Benvenuto in GYMTRACK')
+@section('title', 'GYMTRACK - Home')
 
 @section('content')
 <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-6">Tutti i Workout</h1>
-    
-    <div class="grid gap-4">
-        @foreach($workouts as $workout)
-        <div class="bg-white p-4 rounded shadow">
-            <h2 class="text-xl font-semibold">{{ $workout->name }}</h2>
-            @if($workout->description)
-                <p class="text-gray-600 mt-2">{{ $workout->description }}</p>
-            @endif
-            
-            <div class="mt-3">
-                <h3 class="font-medium">Esercizi:</h3>
-                <ul class="list-disc pl-5">
-                    @foreach($workout->exercises as $exercise)
-                    <li>{{ $exercise->name }}</li>
-                    @endforeach
-                </ul>
-            </div>
+    <h1 class="text-2xl font-bold mb-6">Benvenuto in GYMTRACK</h1>
+
+    <div class="mt-8">
+        <h2 class="text-xl font-semibold mb-2">I miei allenamenti</h2>
+        <div class="bg-gray-100 p-4 rounded shadow">
+            <!-- Spazio vuoto per gli allenamenti -->
         </div>
-        @endforeach
     </div>
 </div>
 @endsection

@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+
+
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -22,6 +26,12 @@ class User extends Authenticatable
         'email',
         'password',
     ];
+
+    protected function password(): Attribute{
+        return Attribute::make(
+            set: fn ($value) => bcrypt($value),
+        );
+    }
 
     /**
      * The attributes that should be hidden for serialization.
