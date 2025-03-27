@@ -1,4 +1,0 @@
-questo non ho veramente ben capito a cosa serva, ma collega model e repository (la repo elabora proprio i dati)
-
-il seguente comando crea il controller per i workout (le schede):
-    php artisan make:controller WorkoutController --resource --model=Workout

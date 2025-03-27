@@ -1,9 +1,0 @@
-ciao lroe sono di fretta la faccio generica scusa
-html chiama le routes
-routes ricevono i dati dalle Repositories
-le repo ricevono i dati dai controller che li ricevono a loro volta dai model
-
-
-depseek mi ha detto che e la versione migliore cosi
-
-ciao!!!
