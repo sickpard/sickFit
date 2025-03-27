@@ -8,7 +8,7 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gray-900">
     @include('components.common.header') <!-- Include l'header -->
 
     <main class="container mx-auto px-4 py-6 min-h-screen">
@@ -24,3 +24,7 @@
     @include('components.common.footer') <!-- Include il footer -->
 </body>
 </html>
+
+<style>
+    
+</style>
