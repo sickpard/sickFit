@@ -15,9 +15,8 @@ class WorkoutController extends Controller{
 
     public function index()
     {
-        return view('index', [
-            'workouts' => $this->workoutRepo->getAll()
-        ]);
+        $workouts = Workout::all();
+        return view('workouts.index', compact('workouts'));
     }
 
     public function store(Request $request)

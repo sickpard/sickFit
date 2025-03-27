@@ -4,17 +4,19 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     ExerciseController,
     ExerciseSetController,
-    WorkoutController
+    WorkoutController,
+    AuthController
 };
 
-// Homepage (Workout)
-Route::get('/', [WorkoutController::class, 'index'])->name('home');
 
-// Workouts (con tutte le route RESTful)
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Homepage
+Route::get('/', function () { 
+    return view('index');
+})->name('home');
+
+// Workouts
 Route::resource('workouts', WorkoutController::class);
-
-// Exercise Sets (se necessario, decommenta)
-// Route::resource('exercise-sets', ExerciseSetController::class);
-
-// Exercises (se NON ti servono, rimuovi il link dal layout)
-// Route::resource('exercises', ExerciseController::class);
