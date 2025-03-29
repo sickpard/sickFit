@@ -16,7 +16,7 @@
     ];
 @endphp
 
-<header id="header" class="header-transition fixed top-0 left-0 w-full z-50 bg-gray-900 text-white shadow-md">
+<header id="header" class="header-transition fixed top-0 left-0 w-full z-50 bg-darkGray text-white">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
         <!-- Logo -->
         <a href="{{ url('/') }}" class="text-2xl font-bold tracking-tight flex items-center gap-2 h-[35px]">
