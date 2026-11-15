@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import type { User } from '@supabase/supabase-js'
-import { signInWithUsername, signUpWithUsername } from './lib/auth'
-import { appendEmptySet, createEmptySet, type EditableSet, type LoadBasis } from './lib/workout'
+import { requestPasswordRecovery, signInWithUsername, signUpWithUsername, updateRecoveredPassword } from './lib/auth'
+import { appendEmptySet, createEmptySet, validatePlanImport, type EditableSet, type LoadBasis } from './lib/workout'
 import { isSupabaseConfigured, requireSupabase, supabase } from './lib/supabase'
 
 type Alternative = { id: string; name: string }
@@ -31,6 +31,9 @@ type WorkoutDraft = { id: string; plan: PlanCard; day: PlanDay; exercises: Exerc
 type HistoryEntry = { id: string; started_at: string; status: string; plan_day_id: string; plan_version_id: string; planName: string; dayName: string }
 
 const authMode = ref<'login' | 'signup'>('login')
+const authFlow = ref<'normal' | 'forgot' | 'reset'>('normal')
+const recoveryPassword = ref('')
+const recoveryConfirm = ref('')
 const form = reactive({ username: '', email: '', password: '', confirmPassword: '' })
 const busy = ref(false)
 const authError = ref('')
@@ -46,6 +49,8 @@ const workout = ref<WorkoutDraft | null>(null)
 const draftPlanName = ref('')
 const draftDays = ref<DayDraft[]>([newDayDraft()])
 const planModalOpen = ref(false)
+const importFeedback = ref('')
+const editingPlan = ref<PlanCard | null>(null)
 
 function newExerciseDraft(): ExercisePlanDraft {
   return { name: '', min: 2, max: 2, optional: false, notes: '', alternatives: '' }
@@ -54,17 +59,67 @@ function newDayDraft(): DayDraft {
   return { name: '', exercises: [newExerciseDraft()] }
 }
 
-const isSignedIn = computed(() => Boolean(user.value))
+const isSignedIn = computed(() => Boolean(user.value) && authFlow.value !== 'reset')
 const filteredHistory = computed(() => {
   const term = historyFilter.value.trim().toLocaleLowerCase('it-IT')
   if (!term) return history.value
   return history.value.filter((entry) => `${entry.planName} ${entry.dayName}`.toLocaleLowerCase('it-IT').includes(term))
 })
+const todayShortcuts = computed(() => {
+  const weekday = new Intl.DateTimeFormat('it-IT', { weekday: 'long' }).format(new Date()).toLocaleLowerCase('it-IT')
+  return plans.value.flatMap((plan) => plan.days
+    .filter((day) => day.name.toLocaleLowerCase('it-IT').includes(weekday))
+    .map((day) => ({ plan, day })))
+})
 
 function changeAuthMode(mode: 'login' | 'signup') {
   authMode.value = mode
+  authFlow.value = 'normal'
   authError.value = ''
   authMessage.value = ''
+}
+
+async function sendRecoveryEmail() {
+  authError.value = ''
+  authMessage.value = ''
+  if (!form.email.trim()) {
+    authError.value = 'Inserisci l’email associata al tuo account.'
+    return
+  }
+  busy.value = true
+  try {
+    const { error } = await requestPasswordRecovery(form.email)
+    if (error) throw error
+    authMessage.value = 'Se l’indirizzo è registrato, riceverai un link per reimpostare la password.'
+  } catch {
+    authError.value = 'Non è stato possibile richiedere il reset. Riprova più tardi.'
+  } finally {
+    busy.value = false
+  }
+}
+
+async function saveRecoveredPassword() {
+  authError.value = ''
+  authMessage.value = ''
+  if (recoveryPassword.value.length < 8 || recoveryPassword.value !== recoveryConfirm.value) {
+    authError.value = 'Inserisci due password uguali di almeno 8 caratteri.'
+    return
+  }
+  busy.value = true
+  try {
+    const { error } = await updateRecoveredPassword(recoveryPassword.value)
+    if (error) throw error
+    authMessage.value = 'Password aggiornata. Ora puoi accedere.'
+    recoveryPassword.value = ''
+    recoveryConfirm.value = ''
+    authFlow.value = 'normal'
+    await supabase?.auth.signOut()
+    user.value = null
+  } catch {
+    authError.value = 'Non è stato possibile aggiornare la password. Richiedi un nuovo link e riprova.'
+  } finally {
+    busy.value = false
+  }
 }
 
 async function submitAuth() {
@@ -148,9 +203,61 @@ async function loadPlans() {
 }
 
 function openPlanForm() {
+  editingPlan.value = null
   draftPlanName.value = ''
   draftDays.value = [newDayDraft()]
+  importFeedback.value = ''
   planModalOpen.value = true
+}
+function openPlanEditor(plan: PlanCard) {
+  editingPlan.value = plan
+  draftPlanName.value = plan.name
+  draftDays.value = plan.days.map((day) => ({
+    name: day.name,
+    exercises: day.exercises.map((exercise) => ({
+      name: exercise.name,
+      min: exercise.target_sets_min,
+      max: exercise.target_sets_max,
+      optional: exercise.is_optional,
+      notes: exercise.prescription_notes ?? '',
+      alternatives: exercise.alternatives.map((item) => item.name).join(', '),
+    })),
+  }))
+  importFeedback.value = ''
+  planModalOpen.value = true
+}
+async function previewPlanImport(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  importFeedback.value = ''
+  if (!file) return
+  if (file.size > 1_000_000) {
+    importFeedback.value = 'Il file supera il limite di 1 MB.'
+    return
+  }
+  try {
+    const parsed: unknown = JSON.parse(await file.text())
+    const result = validatePlanImport(parsed)
+    if (!result.ok) {
+      importFeedback.value = result.error
+      return
+    }
+    draftPlanName.value = result.plan.name
+    draftDays.value = result.plan.days.map((day) => ({
+      name: day.name,
+      exercises: day.exercises.map((exercise) => ({
+        name: exercise.name,
+        min: exercise.min,
+        max: exercise.max,
+        optional: exercise.optional,
+        notes: exercise.notes,
+        alternatives: exercise.alternatives.join(', '),
+      })),
+    }))
+    importFeedback.value = `Anteprima caricata: ${result.plan.days.length} giorni. Controlla i dati e conferma con “Crea scheda”.`
+  } catch {
+    importFeedback.value = 'Il file non contiene JSON valido.'
+  }
 }
 function addDayDraft() { draftDays.value.push(newDayDraft()) }
 function removeDayDraft(index: number) {
@@ -172,13 +279,20 @@ async function createPlan() {
   saving.value = true
   try {
     const client = requireSupabase()
-    const { data: plan, error: planError } = await client.from('training_plans')
-      .insert({ user_id: user.value.id, name: draftPlanName.value.trim() })
-      .select('id').single()
-    if (planError) throw planError
-    const planId = (plan as { id: string }).id
+    let planId: string
+    let nextVersionNumber = 1
+    if (editingPlan.value) {
+      planId = editingPlan.value.id
+      nextVersionNumber = editingPlan.value.versionNumber + 1
+    } else {
+      const { data: plan, error: planError } = await client.from('training_plans')
+        .insert({ user_id: user.value.id, name: draftPlanName.value.trim() })
+        .select('id').single()
+      if (planError) throw planError
+      planId = (plan as { id: string }).id
+    }
     const { data: version, error: versionError } = await client.from('plan_versions')
-      .insert({ user_id: user.value.id, training_plan_id: planId, version_number: 1 })
+      .insert({ user_id: user.value.id, training_plan_id: planId, version_number: nextVersionNumber })
       .select('id').single()
     if (versionError) throw versionError
     const versionId = (version as { id: string }).id
@@ -223,6 +337,7 @@ async function createPlan() {
       }
     }
     planModalOpen.value = false
+    editingPlan.value = null
     await loadPlans()
   } catch {
     dataError.value = 'Non sono riuscito a salvare la scheda. Ricarica e controlla prima di riprovare per evitare duplicati.'
@@ -397,9 +512,10 @@ onMounted(async () => {
     await loadPlans()
     await loadHistory()
   }
-  const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+  const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') authFlow.value = 'reset'
     user.value = session?.user ?? null
-    if (session) window.setTimeout(() => { void loadPlans(); void loadHistory() }, 0)
+    if (session && authFlow.value !== 'reset') window.setTimeout(() => { void loadPlans(); void loadHistory() }, 0)
   })
   authSubscription = listener.subscription
 })
@@ -421,14 +537,14 @@ onUnmounted(() => authSubscription?.unsubscribe())
     <section class="auth-main">
       <div class="auth-card">
         <div class="auth-mobile-brand"><span class="brand-mark">S</span><span>SickFit</span></div>
-        <span class="eyebrow">BENTORNATO</span>
-        <h2>{{ authMode === 'login' ? 'Accedi al tuo spazio' : 'Crea il tuo account' }}</h2>
-        <p class="subcopy">{{ authMode === 'login' ? 'Riprendi da dove avevi lasciato.' : 'Inizia a costruire il tuo storico.' }}</p>
-        <div class="auth-switch" role="tablist" aria-label="Tipo di accesso">
+        <span class="eyebrow">{{ authFlow === 'reset' ? 'AGGIORNA LE CREDENZIALI' : authFlow === 'forgot' ? 'RECUPERO ACCOUNT' : 'BENTORNATO' }}</span>
+        <h2>{{ authFlow === 'reset' ? 'Scegli una nuova password' : authFlow === 'forgot' ? 'Recupera la password' : authMode === 'login' ? 'Accedi al tuo spazio' : 'Crea il tuo account' }}</h2>
+        <p class="subcopy">{{ authFlow === 'reset' ? 'Imposta una password nuova per il tuo account.' : authFlow === 'forgot' ? 'Ti invieremo un link sicuro all’indirizzo associato.' : authMode === 'login' ? 'Riprendi da dove avevi lasciato.' : 'Inizia a costruire il tuo storico.' }}</p>
+        <div v-if="authFlow === 'normal'" class="auth-switch" role="tablist" aria-label="Tipo di accesso">
           <button :class="{ active: authMode === 'login' }" type="button" @click="changeAuthMode('login')">Accedi</button>
           <button :class="{ active: authMode === 'signup' }" type="button" @click="changeAuthMode('signup')">Registrati</button>
         </div>
-        <form class="auth-form" @submit.prevent="submitAuth">
+        <form v-if="authFlow === 'normal'" class="auth-form" @submit.prevent="submitAuth">
           <label>Username
             <input v-model="form.username" autocomplete="username" required minlength="3" maxlength="32" placeholder="Il tuo username" />
           </label>
@@ -443,10 +559,21 @@ onUnmounted(() => authSubscription?.unsubscribe())
           </label>
           <p v-if="authError" class="form-message error" role="alert">{{ authError }}</p>
           <p v-if="authMessage" class="form-message success" role="status">{{ authMessage }}</p>
-          <button class="button primary full" type="submit" :disabled="busy">
-            {{ busy ? 'Attendi…' : authMode === 'login' ? 'Accedi' : 'Crea account' }} <span aria-hidden="true">↗</span>
-          </button>
+          <button class="button primary full" type="submit" :disabled="busy">{{ busy ? 'Attendi…' : authMode === 'login' ? 'Accedi' : 'Crea account' }} <span aria-hidden="true">↗</span></button>
         </form>
+        <form v-else-if="authFlow === 'forgot'" class="auth-form" @submit.prevent="sendRecoveryEmail">
+          <label>Email<input v-model="form.email" type="email" autocomplete="email" required placeholder="nome@email.com" /></label>
+          <p v-if="authError" class="form-message error" role="alert">{{ authError }}</p><p v-if="authMessage" class="form-message success" role="status">{{ authMessage }}</p>
+          <button class="button primary full" type="submit" :disabled="busy">{{ busy ? 'Invio…' : 'Invia link di recupero' }}</button>
+          <button type="button" class="text-button" @click="authFlow = 'normal'; authError = ''; authMessage = ''">← Torna all’accesso</button>
+        </form>
+        <form v-else class="auth-form" @submit.prevent="saveRecoveredPassword">
+          <label>Nuova password<input v-model="recoveryPassword" type="password" autocomplete="new-password" required minlength="8" /></label>
+          <label>Conferma password<input v-model="recoveryConfirm" type="password" autocomplete="new-password" required minlength="8" /></label>
+          <p v-if="authError" class="form-message error" role="alert">{{ authError }}</p><p v-if="authMessage" class="form-message success" role="status">{{ authMessage }}</p>
+          <button class="button primary full" type="submit" :disabled="busy">{{ busy ? 'Aggiornamento…' : 'Aggiorna password' }}</button>
+        </form>
+        <button v-if="authFlow === 'normal' && authMode === 'login'" type="button" class="text-button" @click="authFlow = 'forgot'; authError = ''; authMessage = ''">Password dimenticata?</button>
         <p v-if="!isSupabaseConfigured" class="setup-note">Collegamento Supabase da configurare prima di usare l’accesso.</p>
         <p class="privacy-note">Accedendo, i tuoi allenamenti rimangono associati al tuo account.</p>
       </div>
@@ -481,6 +608,10 @@ onUnmounted(() => authSubscription?.unsubscribe())
           <div><span class="eyebrow">{{ page === 'plans' ? 'STRUTTURA IL TUO PERCORSO' : 'IL TUO SPAZIO DI LAVORO' }}</span><h1>{{ page === 'plans' ? 'Le tue schede' : 'Ogni sessione conta.' }}</h1><p>{{ page === 'plans' ? 'Organizza le tue routine e mantieni intatto lo storico.' : 'Scegli una scheda e il giorno da cui vuoi partire.' }}</p></div>
           <button class="button primary" @click="openPlanForm">＋ <span>Nuova scheda</span></button>
         </div>
+        <div v-if="page === 'home' && todayShortcuts.length" class="today-shortcut">
+          <div><span class="eyebrow">OGGI · {{ new Intl.DateTimeFormat('it-IT', { weekday: 'long' }).format(new Date()) }}</span><strong>Allenamento previsto</strong></div>
+          <button class="button outline" :disabled="saving" @click="startWorkout(todayShortcuts[0].plan, todayShortcuts[0].day)">{{ todayShortcuts[0].plan.name }} · {{ todayShortcuts[0].day.name }} <span>→</span></button>
+        </div>
         <div class="stats-row">
           <div class="stat-card"><span class="stat-label">SCHEDE ATTIVE</span><strong>{{ plans.length.toString().padStart(2, '0') }}</strong><small>Routine personali</small></div>
           <div class="stat-card"><span class="stat-label">ALLENAMENTI REGISTRATI</span><strong>{{ history.length.toString().padStart(2, '0') }}</strong><small>Sessioni nello storico</small></div>
@@ -490,7 +621,7 @@ onUnmounted(() => authSubscription?.unsubscribe())
         <div v-if="!plans.length" class="empty-card"><div class="empty-icon">↗</div><div><h3>La tua prima scheda parte da qui</h3><p>Crea una scheda, aggiungi i giorni e gli esercizi previsti. Potrai registrare quello che fai davvero, anche quando cambia.</p></div><button class="button outline" @click="openPlanForm">Crea la prima scheda</button></div>
         <div v-else class="plan-grid">
           <article v-for="(plan, planIndex) in plans" :key="plan.id" class="plan-card" :style="{ '--plan-index': planIndex }">
-            <div class="plan-card-head"><span class="plan-kicker">SCHEDA {{ String(planIndex + 1).padStart(2, '0') }}</span><span class="version-pill">v{{ plan.versionNumber }}</span></div>
+            <div class="plan-card-head"><span class="plan-kicker">SCHEDA {{ String(planIndex + 1).padStart(2, '0') }}</span><div class="plan-card-actions"><span class="version-pill">v{{ plan.versionNumber }}</span><button class="text-button small-text" @click="openPlanEditor(plan)">Modifica</button></div></div>
             <h3>{{ plan.name }}</h3>
             <p class="plan-meta">{{ plan.days.length }} {{ plan.days.length === 1 ? 'giorno' : 'giorni' }} · {{ plan.days.reduce((sum, day) => sum + day.exercises.length, 0) }} esercizi</p>
             <div class="day-list"><button v-for="day in plan.days" :key="day.id" class="day-button" :disabled="saving" @click="startWorkout(plan, day)"><span><i class="day-dot"></i>{{ day.name }}</span><span class="day-arrow">→</span></button></div>
@@ -517,7 +648,7 @@ onUnmounted(() => authSubscription?.unsubscribe())
                 <label>Carico (kg)<input v-model="set.weightKg" inputmode="decimal" type="number" min="0" step="0.25" placeholder="—" /></label>
                 <label>Modalità<select v-model="set.loadBasis"><option value="per_side">Per lato</option><option value="total">Totale</option></select></label>
                 <button class="icon-button remove-set" aria-label="Rimuovi serie" @click="removeSet(exercise, setIndex)">−</button>
-                <div class="set-notes"><label v-for="(note, noteIndex) in set.notes" :key="noteIndex">Nota serie<input v-model="set.notes[noteIndex]" maxlength="500" placeholder="Facoltativa — testo originale" /></label><button class="text-button small-text" @click="addSetNote(set)">＋ Aggiungi nota</button></div>
+                <div class="set-notes"><label v-for="(_, noteIndex) in set.notes" :key="noteIndex">Nota serie<input v-model="set.notes[noteIndex]" maxlength="500" placeholder="Facoltativa — testo originale" /><button v-if="set.notes.length > 1" type="button" class="text-button small-text" @click="removeSetNote(set, noteIndex)">Rimuovi nota</button></label><button class="text-button small-text" @click="addSetNote(set)">＋ Aggiungi nota</button></div>
               </div>
               <button class="add-set" @click="addSet(exercise)"><span>＋</span> Aggiungi serie</button>
             </div>
@@ -539,9 +670,12 @@ onUnmounted(() => authSubscription?.unsubscribe())
 
     <div v-if="planModalOpen" class="modal-backdrop" @click.self="planModalOpen = false">
       <section class="plan-modal" role="dialog" aria-modal="true" aria-labelledby="new-plan-title">
-        <div class="modal-header"><div><span class="eyebrow">NUOVA ROUTINE</span><h2 id="new-plan-title">Crea una scheda</h2></div><button class="icon-button" aria-label="Chiudi" @click="planModalOpen = false">×</button></div>
+        <div class="modal-header"><div><span class="eyebrow">{{ editingPlan ? 'NUOVA VERSIONE' : 'NUOVA ROUTINE' }}</span><h2 id="new-plan-title">{{ editingPlan ? 'Modifica scheda' : 'Crea una scheda' }}</h2></div><button class="icon-button" aria-label="Chiudi" @click="planModalOpen = false">×</button></div>
+        <label class="field">Importa una scheda JSON (max 1 MB)<input type="file" accept="application/json,.json" @change="previewPlanImport" /></label>
+        <p v-if="importFeedback" class="form-message" role="status">{{ importFeedback }}</p>
         <form @submit.prevent="createPlan">
-          <label class="field">Nome scheda<input v-model="draftPlanName" required maxlength="100" placeholder="Es. PPL + Upper" /></label>
+          <label class="field">Nome scheda<input v-model="draftPlanName" required maxlength="100" :disabled="Boolean(editingPlan)" placeholder="Es. PPL + Upper" /></label>
+          <p v-if="editingPlan" class="form-message">Il nome resta invariato per non modificare le etichette nello storico. Salveremo i contenuti come versione {{ editingPlan.versionNumber + 1 }}.</p>
           <div v-for="(day, dayIndex) in draftDays" :key="dayIndex" class="draft-day">
             <div class="draft-day-head"><label class="field">Giorno {{ dayIndex + 1 }}<input v-model="day.name" required maxlength="100" placeholder="Es. Lunedì · Gambe" /></label><button v-if="draftDays.length > 1" type="button" class="text-button remove-day" @click="removeDayDraft(dayIndex)">Rimuovi giorno</button></div>
             <div v-for="(exercise, exerciseIndex) in day.exercises" :key="exerciseIndex" class="draft-exercise">
@@ -554,7 +688,7 @@ onUnmounted(() => authSubscription?.unsubscribe())
             <button type="button" class="text-button" @click="addExerciseDraft(day)">＋ Aggiungi esercizio</button>
           </div>
           <button type="button" class="button outline add-day-button" @click="addDayDraft">＋ Aggiungi giorno</button>
-          <div class="modal-actions"><button type="button" class="button ghost" @click="planModalOpen = false">Annulla</button><button class="button primary" :disabled="saving">{{ saving ? 'Salvataggio…' : 'Crea scheda' }}</button></div>
+          <div class="modal-actions"><button type="button" class="button ghost" @click="planModalOpen = false">Annulla</button><button class="button primary" :disabled="saving">{{ saving ? 'Salvataggio…' : editingPlan ? 'Crea nuova versione' : 'Crea scheda' }}</button></div>
         </form>
       </section>
     </div>

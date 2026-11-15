@@ -6,16 +6,27 @@ PWA mobile-first per gestire schede, registrare allenamenti e consultare lo stor
 
 Prima iterazione locale: UI italiana per registrazione/accesso, creazione di schede con più giorni ed esercizi, scelta manuale del giorno, registrazione di esercizi/serie/note e vista dello storico. L’app non usa dati demo e non conserva sessioni offline.
 
-Il progetto non è ancora eseguibile in questa VM: l’installazione delle dipendenze è stata bloccata dalla protezione risorse. Non sono stati eseguiti test, build o deploy. Il login a tre campi richiede anche la Edge Function sotto `supabase/functions/login-with-username`, che al momento è solo sorgente locale e non è stata deployata. L’import JSON/Notion, il recupero password, la modifica/versionamento di schede esistenti e la scorciatoia home per il giorno corrente restano da completare.
+## Backlog e verifica locale
+
+- **Modifica/versionamento schede:** la UI duplica giorni ed esercizi in una nuova `plan_versions`; le sessioni esistenti continuano a riferirsi ai vecchi ID. Il nome della scheda resta invariato per evitare di riscrivere le etichette storiche. Il comportamento non è ancora verificato contro il progetto Supabase live.
+- **Recupero password:** UI di richiesta link, gestione evento `PASSWORD_RECOVERY` e aggiornamento password implementati. Il redirect va consentito nelle impostazioni Auth Supabase e il flusso live non è stato provato.
+- **Import JSON:** selezione file fino a 1 MB, validazione/normalizzazione e anteprima modificabile nel form di creazione; il salvataggio avviene solo dopo conferma. Formato: `{ name, days: [{ name, exercises: [{ name, min, max, optional?, notes?, alternatives? }] }] }`.
+- **Import Notion:** non implementato; richiede un’integrazione server-side per non esporre il token e non è stato aggiunto alcun endpoint o segreto.
+- **Workout di oggi:** la home mostra una scorciatoia quando il nome di un giorno della scheda contiene il giorno della settimana corrente in italiano; in assenza di una corrispondenza si continua dalla selezione manuale.
+
+Verifica locale su SickPC: `pnpm test` — 5 test superati; `pnpm build` — completata. `npm install` non è riuscito per un errore interno di npm (`Cannot read properties of null (reading 'edgesOut')`); `pnpm install` è riuscito e ha creato `pnpm-lock.yaml`. Nessun deploy o test d’integrazione Supabase eseguito. L’integrazione account/RLS richiede account di test distinti e resta da verificare.
+
+Il login a tre campi richiede anche la Edge Function sotto `supabase/functions/login-with-username`, che è solo sorgente locale e non è stata deployata.
+
 
 ## Ambiente di sviluppo
 
 In un ambiente di sviluppo autorizzato, dalla root del progetto:
 
 1. Copia `.env.example` in `.env.local` e inserisci `VITE_SUPABASE_URL` e la chiave *publishable* del progetto SickFit.
-2. Installa le dipendenze con `npm install`.
-3. Avvia Vite con `npm run dev`.
-4. Esegui i test con `npm test`; `npm run build` è da eseguire solo quando autorizzato.
+2. Installa le dipendenze con `pnpm install` (genera e aggiorna `pnpm-lock.yaml`).
+3. Avvia Vite con `pnpm dev`.
+4. Esegui i test con `pnpm test` e la build con `pnpm build` quando autorizzato per quell’ambiente.
 
 Non inserire mai nel frontend una chiave `sb_secret` o `service_role`. I file `.env*` sono ignorati da Git, tranne `.env.example`.
 
@@ -23,7 +34,7 @@ Non inserire mai nel frontend una chiave `sb_secret` o `service_role`. I file `.
 
 Le tabelle e le policy RLS sono state create nel progetto Supabase `sickfit`. Il file `supabase/functions/login-with-username/index.ts` implementa il controllo della coppia username/email e poi delega la verifica della password a Supabase Auth. La funzione richiede le variabili server-side `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` (oppure `SUPABASE_ANON_KEY`) e `SUPABASE_SERVICE_ROLE_KEY`; non committarle e non inserirle nel frontend.
 
-La funzione è configurata con `verify_jwt = false` perché viene chiamata prima che l’utente abbia una sessione. Prima di renderla disponibile pubblicamente è ancora necessaria una revisione del rate limiting e della configurazione CORS (`SICKFIT_ALLOWED_ORIGINS`). Non è stata distribuita né provata.
+La funzione è configurata con `verify_jwt = false` perché viene chiamata prima che l’utente abbia una sessione. La revisione locale rileva che manca un rate limiting applicativo; prima dell’esposizione pubblica servono una protezione contro tentativi ripetuti, la verifica della configurazione CORS (`SICKFIT_ALLOWED_ORIGINS`) e un test controllato. Non è stata distribuita né provata.
 
 ## PWA
 

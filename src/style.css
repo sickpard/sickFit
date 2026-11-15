@@ -107,6 +107,11 @@ h1, h2, h3 { color: var(--text); font-family: Manrope, 'DM Sans', sans-serif; le
 .page-heading h1 { margin: 0 0 9px; font-size: clamp(30px, 3.3vw, 44px); line-height: 1.05; letter-spacing: -.065em; }
 .page-heading p { margin: 0; color: var(--muted); font-size: 13px; }
 .page-heading .button { flex: 0 0 auto; }
+.today-shortcut { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: -13px 0 26px; padding: 15px 17px; border: 1px solid rgba(184,243,107,.2); border-radius: 13px; background: rgba(184,243,107,.045); }
+.today-shortcut > div { display: grid; gap: 5px; }
+.today-shortcut strong { font-size: 13px; }
+.today-shortcut .eyebrow { font-size: 8px; }
+.today-shortcut .button { min-height: 38px; }
 .stats-row { display: grid; grid-template-columns: 1fr 1fr 1.25fr; gap: 12px; margin-bottom: 43px; }
 .stat-card { min-height: 117px; display: flex; flex-direction: column; align-items: flex-start; padding: 18px 19px; border: 1px solid var(--line); border-radius: 15px; background: linear-gradient(135deg, #141d18, #101713); }
 .stat-label { color: #7e8c82; font-size: 9px; font-weight: 700; letter-spacing: .12em; }

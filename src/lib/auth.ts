@@ -1,6 +1,16 @@
 import { requireSupabase } from './supabase'
 import { normalizeUsername } from './workout'
 
+export async function requestPasswordRecovery(email: string) {
+  return requireSupabase().auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+    redirectTo: `${window.location.origin}${window.location.pathname}?recovery=1`,
+  })
+}
+
+export async function updateRecoveredPassword(password: string) {
+  return requireSupabase().auth.updateUser({ password })
+}
+
 export async function signInWithUsername(input: {
   username: string
   email: string
