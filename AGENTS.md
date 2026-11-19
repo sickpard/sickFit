@@ -1,29 +1,58 @@
-# SickFit — istruzioni per Hermes
+# AGENTS.md — istruzioni operative SickFit
 
-## Scopo e vincoli
-- PWA mobile-first in italiano per schede e diario allenamenti: Vue 3, TypeScript, Vite e Supabase Auth/Postgres. Online-only.
-- Non introdurre SQLite, server residenti sulla VM, bot Telegram/Discord, funzionalità offline o sincronizzazione. App mobile nativa e scorciatoia per il workout del giorno sono backlog.
-- Non chiedere né leggere segreti. Non committare `.env`, token o chiavi. Nel browser usare solo URL e publishable key; service-role key esclusivamente come segreto Supabase lato server.
-- Nessun commit/push senza richiesta esplicita. Non modificare Supabase o distribuire funzioni senza autorizzazione.
-- L’utente ha vietato build e comandi simili sulla VM; l’installazione era stata bloccata da heavyguard per memoria disponibile insufficiente. Non aggirare il blocco con altri strumenti o package manager. Nessuna build, test o deploy è stata verificata.
+Queste istruzioni valgono per l’intera repository SickFit e prevalgono sulle convenzioni generiche quando più restrittive. Applicarle con `README.md`, `SCHEMA.md`, la wiki di progetto e le richieste correnti dell’utente.
 
-## Stato della base
-- Prima iterazione di sorgenti, non release validata. `node_modules` e `package-lock.json` assenti. `npm install` è da eseguire in ambiente di sviluppo autorizzato; generare il lockfile con il package manager, non a mano.
-- Il database Supabase `sickfit` (ref `blljepmetnvfriqjdpcn`) ha 10 tabelle e RLS attiva, con policy/grants e trigger confermati dall’utente. Gli strumenti Supabase disponibili a Hermes sono read-only. Non presumere che il codice locale o la Edge Function siano stati deployati.
-- `supabase/functions/login-with-username` è solo sorgente locale. Prima del deploy rivedere rate limiting, CORS e segreti server-side.
-- README e TODO distinguono sorgenti presenti da funzioni incomplete; non dichiarare una funzione pronta finché non è verificata.
+## 1. Prima di intervenire
 
-## Modello dati e prodotto
-- Isolamento per utente tramite RLS, non solo filtri UI.
-- Schede multiple: `training_plans` → `plan_versions` → `plan_days` → `plan_exercises`; sessioni `workout_sessions` collegate alla versione e al giorno; esercizi svolti `workout_exercises`, serie `exercise_sets`, note multiple `set_notes`.
-- Le modifiche alle schede devono creare una nuova versione e non alterare le sessioni storiche. Il numero di serie prescritto è indicativo; registrare serie in meno/in più e salti.
-- Peso in kg, predefinito “per lato”, con scelta “totale”. Token Notion solo temporaneo durante l’import e mai conservato.
+1. Verifica di essere nella root `/home/ubuntu/projects/personal/sickfit`; controlla branch e working tree e conserva ogni modifica preesistente.
+2. Leggi questo file, `README.md`, `SCHEMA.md` e le pagine pertinenti di `wiki/`; ispeziona configurazione e sorgenti direttamente coinvolti. Non dedurre percorsi o funzionalità dai nomi.
+3. Consulta `~/wiki/README.md`, `~/GUIDE/README.md` e la guida operativa pertinente prima di attività che ricadono nelle regole della VM.
+4. Non leggere, stampare, copiare o registrare contenuti da file `.env*`, token, password, chiavi private o credenziali. `.env.example` può essere esaminato solo per i nomi delle variabili e i placeholder.
 
-## Prossime attività
-1. Configurare e installare dipendenze in un ambiente autorizzato; poi eseguire test e build solo con nuova autorizzazione.
-2. Verificare signup/login a tre campi, RLS con account distinti, creazione schede/sessioni e storico.
-3. Completare sicurezza e deploy della Edge Function solo dopo approvazione.
-4. Implementare versionamento/modifica delle schede, recupero password e import JSON/Notion con validazione e anteprima.
-5. Verificare e distribuire la PWA su hosting HTTPS.
+## 2. Ambito e architettura verificata
 
-Leggere anche `README.md` e la sezione SickFit in `~/TODO/TODO.txt` (sull’ambiente originario); aggiornare la documentazione pertinente dopo ogni modifica.
+- SickFit è una PWA mobile-first in italiano, online-only, basata su Vue 3, TypeScript e Vite, con Supabase Auth/PostgreSQL.
+- `src/` contiene frontend e UI; `src/lib/` contiene helper e integrazione dati/auth; verificare sempre il tree prima di riferire un simbolo.
+- `supabase/functions/login-with-username/` contiene sorgente locale della Edge Function. Non dichiararla distribuita o verificata in runtime senza evidenza.
+- `supabase/config.toml` contiene configurazione Supabase del progetto; il database live si modifica soltanto con autorizzazione esplicita.
+- La UI usa tema chiaro/scuro. Non introdurre SQLite, server residenti sulla VM, bot, funzionalità offline o sincronizzazione; app mobile nativa e scorciatoia per il workout del giorno sono backlog, non requisiti impliciti.
+
+## 3. Schema dati e integrità
+
+- `SCHEMA.md` alla root è il riferimento canonico del modello dati e dei contratti API osservati. Descrive esclusivamente fatti verificati e separa requisiti di prodotto, metadati DB e lacune.
+- Prima di modificare query, tipi, persistenza, autenticazione o funzioni Supabase, confronta l’implementazione con `SCHEMA.md` e con le migrazioni/sorgenti realmente disponibili.
+- Ogni modifica autorizzata a tabelle, colonne, default, vincoli, relazioni, indici, RLS/grants, trigger o contratti API richiede l’aggiornamento contestuale di `SCHEMA.md` e della wiki. Non inventare DDL o comportamento non esposto dalle fonti; marca i dati ignoti come non verificati.
+- L’isolamento per utente deve dipendere da RLS, non solo da filtri UI. Non modificare policy, grants, database o deploy senza autorizzazione esplicita.
+- Le sessioni storiche devono restare associate alla versione di piano originaria. Non alterare gli allenamenti passati quando cambiano le schede.
+- Il numero di serie prescritto è indicativo; le registrazioni possono avere più o meno serie o esercizi saltati. Carichi in kg, senza conversioni implicite.
+
+## 4. Sicurezza e limiti operativi
+
+- L’utente autorizza in modo continuativo soltanto modifiche con verifiche statiche sulla VM.
+- Non eseguire sulla VM installazioni (inclusi `npm install`/`npm ci`), test, build, compilazioni o avvio dell’app/dev server. Non aggirare heavyguard con altri strumenti o ambienti sulla VM. Dichiarare tali verifiche non eseguite.
+- Non usare una chiave `service_role` nel browser; il frontend può usare solo URL e publishable key. Segreti server-side restano in ambiente Supabase, mai in frontend, Git o documentazione.
+- Prima di rendere pubblica/deployare la Edge Function, servono autorizzazione esplicita e revisione di rate limiting, CORS e gestione segreti.
+- Nessun commit, push, release o deploy senza richiesta esplicita dell’utente.
+
+## 5. Convenzioni di codice
+
+- Preserva confini esistenti di componenti, template, stili, helper, chiavi di localizzazione, estensioni, endpoint, campi backend e contratti serializzati.
+- Testi UI in italiano, coerenti con le convenzioni presenti. Mantieni letterali nomi di tabella/campo, valori di protocollo e identificatori.
+- Mantieni separati stato di configurazione, stato runtime e stato di vista; evita logica duplicata tra componenti.
+- Non aggiungere dipendenze, build artifact (`dist/`) o file generati senza necessità verificata e autorizzazione.
+
+## 6. Documentazione e wiki
+
+- `README.md`: stato, setup e limiti operativi del progetto.
+- `SCHEMA.md`: modello dati, vincoli, relazioni, sicurezza osservata, accesso dati e contratti API.
+- `wiki/index.md`: indice della wiki SickFit; `wiki/overview.md`: panoramica funzionale/tecnica.
+- Prima di modificare documentazione, leggi `SCHEMA.md`, `wiki/index.md`, le pagine target e le sorgenti pertinenti. Aggiorna la wiki di SickFit e gli indici/link coinvolti nella stessa attività.
+- Dopo modifiche rilevanti al progetto aggiorna anche la voce SickFit in `~/wiki/progetti.md`; aggiorna TODO solo quando cambia lo stato di un’attività aperta.
+- Distingui comportamento implementato, requisiti, esempi e ipotesi. Non inventare dati di prodotto, capacità, versioni, autori, policy o conformità normativa.
+
+## 7. Verifica e consegna
+
+- In questa VM sono ammesse solo verifiche statiche leggere e non invasive, ad esempio ispezione mirata dei file e `git diff --check`.
+- Esegui `git diff --check` e `git status --short` prima della consegna, se consentito; non eseguire test, build, installazioni o runtime.
+- Riporta esattamente quali controlli sono stati eseguiti e quali restano non verificati. Non affermare correttezza runtime, sicurezza completa o deploy senza prove.
+- Non eliminare o sovrascrivere modifiche non correlate. Nessun commit o push senza richiesta esplicita.

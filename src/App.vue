@@ -4,6 +4,7 @@ import type { User } from '@supabase/supabase-js'
 import { requestPasswordRecovery, signInWithUsername, signUpWithUsername, updateRecoveredPassword } from './lib/auth'
 import { appendEmptySet, createEmptySet, validatePlanImport, type EditableSet, type LoadBasis } from './lib/workout'
 import { isSupabaseConfigured, requireSupabase, supabase } from './lib/supabase'
+import { getInitialTheme, getSavedTheme, saveTheme, type Theme } from './lib/theme'
 
 type Alternative = { id: string; name: string }
 type PlanExercise = {
@@ -34,6 +35,7 @@ const authMode = ref<'login' | 'signup'>('login')
 const authFlow = ref<'normal' | 'forgot' | 'reset'>('normal')
 const recoveryPassword = ref('')
 const recoveryConfirm = ref('')
+const theme = ref<Theme>('dark')
 const form = reactive({ username: '', email: '', password: '', confirmPassword: '' })
 const busy = ref(false)
 const authError = ref('')
@@ -71,6 +73,13 @@ const todayShortcuts = computed(() => {
     .filter((day) => day.name.toLocaleLowerCase('it-IT').includes(weekday))
     .map((day) => ({ plan, day })))
 })
+
+function toggleTheme() {
+  theme.value = theme.value === 'dark' ? 'light' : 'dark'
+  document.documentElement.dataset.theme = theme.value
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.value === 'dark' ? '#0b100e' : '#f5f5f7')
+  saveTheme(theme.value)
+}
 
 function changeAuthMode(mode: 'login' | 'signup') {
   authMode.value = mode
@@ -505,6 +514,7 @@ async function signOut() {
 
 let authSubscription: { unsubscribe: () => void } | undefined
 onMounted(async () => {
+  theme.value = getInitialTheme(getSavedTheme(), window.matchMedia('(prefers-color-scheme: dark)').matches)
   if (!supabase) return
   const { data } = await supabase.auth.getSession()
   user.value = data.session?.user ?? null
@@ -535,6 +545,7 @@ onUnmounted(() => authSubscription?.unsubscribe())
       <span class="aside-foot">SICKFIT · ALLENATI CON INTENZIONE</span>
     </section>
     <section class="auth-main">
+      <button class="theme-toggle auth-theme-toggle" type="button" :aria-label="theme === 'dark' ? 'Passa al tema chiaro' : 'Passa al tema scuro'" :title="theme === 'dark' ? 'Tema chiaro' : 'Tema scuro'" @click="toggleTheme"><span aria-hidden="true">{{ theme === 'dark' ? '☼' : '☾' }}</span><span>{{ theme === 'dark' ? 'Chiaro' : 'Scuro' }}</span></button>
       <div class="auth-card">
         <div class="auth-mobile-brand"><span class="brand-mark">S</span><span>SickFit</span></div>
         <span class="eyebrow">{{ authFlow === 'reset' ? 'AGGIORNA LE CREDENZIALI' : authFlow === 'forgot' ? 'RECUPERO ACCOUNT' : 'BENTORNATO' }}</span>
@@ -598,7 +609,7 @@ onUnmounted(() => authSubscription?.unsubscribe())
     <section class="workspace">
       <header class="topbar">
         <div><span class="breadcrumb">SICKFIT <span>/</span> {{ page === 'history' ? 'STORICO' : page === 'plans' ? 'SCHEDE' : page === 'session' ? 'ALLENAMENTO' : 'PANORAMICA' }}</span></div>
-        <div class="topbar-right"><span class="online-pill"><i></i> Online</span><button class="avatar top-avatar" :aria-label="`Account ${user?.email ?? ''}`">{{ (user?.email?.[0] ?? 'S').toUpperCase() }}</button></div>
+        <div class="topbar-right"><span class="online-pill"><i></i> Online</span><button class="theme-toggle" type="button" :aria-label="theme === 'dark' ? 'Passa al tema chiaro' : 'Passa al tema scuro'" :title="theme === 'dark' ? 'Tema chiaro' : 'Tema scuro'" @click="toggleTheme"><span aria-hidden="true">{{ theme === 'dark' ? '☼' : '☾' }}</span><span>{{ theme === 'dark' ? 'Chiaro' : 'Scuro' }}</span></button><button class="avatar top-avatar" :aria-label="`Account ${user?.email ?? ''}`">{{ (user?.email?.[0] ?? 'S').toUpperCase() }}</button></div>
       </header>
 
       <div v-if="dataError" class="toast-error" role="alert"><span>{{ dataError }}</span><button aria-label="Chiudi" @click="dataError = ''">×</button></div>

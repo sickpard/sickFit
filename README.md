@@ -4,7 +4,7 @@ PWA mobile-first per gestire schede, registrare allenamenti e consultare lo stor
 
 ## Stato
 
-Prima iterazione locale: UI italiana per registrazione/accesso, creazione di schede con più giorni ed esercizi, scelta manuale del giorno, registrazione di esercizi/serie/note e vista dello storico. L’app non usa dati demo e non conserva sessioni offline.
+Prima iterazione locale: UI italiana per registrazione/accesso, creazione di schede con più giorni ed esercizi, scelta manuale del giorno, registrazione di esercizi/serie/note e vista dello storico. Tema chiaro/scuro selezionabile, con preferenza salvata sul dispositivo e scelta iniziale basata sul tema del sistema. L’app non usa dati demo e non conserva sessioni offline.
 
 ## Backlog e verifica locale
 
@@ -43,3 +43,9 @@ Manifest e icone sono presenti. Non c’è service worker e non viene memorizzat
 ## Git
 
 La nuova PWA Vue è il contenuto corrente della root sul branch principale. La precedente applicazione Laravel viene rimossa dal tree attuale; la cronologia Git precedente resta conservata. `origin` punta a `git@github.com:sickpard/sickFit.git`.
+
+## Documentazione
+
+- [AGENTS.md](./AGENTS.md) contiene le istruzioni operative vincolanti per questa repository.
+- [SCHEMA.md](./SCHEMA.md) documenta il modello dati e i contratti API osservati, distinguendo i dati verificati dalle lacune.
+- La [wiki SickFit](./wiki/index.md) raccoglie panoramica e collegamenti alla documentazione di progetto.
