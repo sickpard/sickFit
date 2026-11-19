@@ -7,3 +7,5 @@ Documentazione tecnica e funzionale del progetto.
 - [Schema database e contratti API](../SCHEMA.md) — riferimento per il modello dati `public`, i vincoli e i contratti osservati; lacune esplicitamente indicate.
 - [Istruzioni per agenti e contributor](../AGENTS.md)
 - [README e ambiente di sviluppo](../README.md)
+- [Decisioni architetturali monorepo](../docs/architecture-decisions.md)
+- [TODO e stato delle attività](../docs/todo.md)

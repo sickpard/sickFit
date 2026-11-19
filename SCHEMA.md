@@ -9,7 +9,7 @@
 | Proprietà | Valore verificato |
 |---|---|
 | Applicazione | SickFit |
-| Versione frontend | `0.1.0` (`package.json`) |
+| Versione frontend | `0.1.0` (`frontend/package.json`) |
 | Stack frontend | Vue 3, TypeScript, Vite |
 | Persistenza/autenticazione | Supabase (PostgreSQL + Supabase Auth) |
 | Schema applicativo | `public` |
@@ -245,7 +245,7 @@ L’import JSON/Notion e le relative regole di validazione non sono ancora imple
 
 ## 7. Accesso dati e query pattern
 
-Il client usa `@supabase/supabase-js` con `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`. La chiave `service_role` non deve mai essere usata nel frontend.
+Il frontend in `frontend/` usa `@supabase/supabase-js` con `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`. La chiave `service_role` non deve mai essere usata nel frontend.
 
 Pattern letti nei sorgenti:
 
@@ -268,7 +268,7 @@ Non sono documentati piani di query, volumi attesi, benchmark o soglie di latenz
 ### Edge Function `login-with-username` — sola implementazione locale
 
 - Invocazione dal client: `functions.invoke('login-with-username', { body })`.
-- Metodo supportato dal sorgente: `POST`; `OPTIONS` per preflight. `verify_jwt = false` in `supabase/config.toml` perché l’accesso avviene prima della sessione.
+- Metodo supportato dal sorgente: `POST`; `OPTIONS` per preflight. `verify_jwt = false` in `backend/supabase/config.toml` perché l’accesso avviene prima della sessione.
 - Request JSON: `{ "username": string, "email": string, "password": string }`.
 - Il sorgente normalizza username/email, cerca il profilo per `username_normalized`, confronta l’email di `auth.users`, quindi delega la verifica password a `auth.signInWithPassword`.
 - Successo nel sorgente: HTTP 200 con `{ "session": { "access_token": string, "refresh_token": string } }`; i token sono consegnati al client solo per `auth.setSession`.
@@ -281,7 +281,7 @@ Non sono documentati piani di query, volumi attesi, benchmark o soglie di latenz
 ## 9. Migrazioni e storia dello schema
 
 - `mcp__supabase__list_migrations` ha restituito un elenco vuoto alla verifica.
-- La ricerca nel tree locale `supabase/` non ha trovato file di migrazione `.sql`; `supabase/config.toml` identifica il progetto e configura `login-with-username`.
+- La ricerca nel tree locale `backend/supabase/` non ha trovato file di migrazione `.sql`; `backend/supabase/config.toml` identifica il progetto e configura `login-with-username`.
 - Non sono quindi determinati numero di versione DB, date/autori delle migrazioni o motivazioni delle modifiche DDL. Non interpretare un elenco vuoto come prova che lo schema non sia mai stato modificato.
 - Quando saranno introdotte migrazioni autorizzate, registrare in questa sezione ID, data, motivazione e oggetti toccati, senza sostituire i sorgenti di migrazione.
 
@@ -301,6 +301,6 @@ Fonti controllate per questa revisione:
 
 - Catalogo Supabase `public` tramite tool read-only `list_tables` (`verbose=true`), progetto `blljepmetnvfriqjdpcn`.
 - Elenco migrazioni Supabase tramite tool read-only `list_migrations`.
-- Sorgenti locali: `package.json`, `src/lib/supabase.ts`, `src/lib/auth.ts`, `src/App.vue`, `supabase/config.toml`, `supabase/functions/login-with-username/index.ts`, `README.md`, `AGENTS.md`.
+- Sorgenti locali: `frontend/package.json`, `frontend/src/lib/supabase.ts`, `frontend/src/lib/auth.ts`, `frontend/src/App.vue`, `backend/supabase/config.toml`, `backend/supabase/functions/login-with-username/index.ts`, `README.md`, `AGENTS.md`.
 
 Dati non esposti dalle fonti disponibili — DDL integrale, indici completi, policy RLS/grants dettagliati, definizioni trigger, clausole di cancellazione e storia effettiva delle migrazioni — restano da verificare prima di documentarli come fatti.

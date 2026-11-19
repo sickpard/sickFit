@@ -1,0 +1,9 @@
+{
+  "expo": {
+    "name": "SickFit",
+    "slug": "sickfit",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic"
+  }
+}

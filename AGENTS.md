@@ -12,10 +12,10 @@ Queste istruzioni valgono per l’intera repository SickFit e prevalgono sulle c
 ## 2. Ambito e architettura verificata
 
 - SickFit è una PWA mobile-first in italiano, online-only, basata su Vue 3, TypeScript e Vite, con Supabase Auth/PostgreSQL.
-- `src/` contiene frontend e UI; `src/lib/` contiene helper e integrazione dati/auth; verificare sempre il tree prima di riferire un simbolo.
-- `supabase/functions/login-with-username/` contiene sorgente locale della Edge Function. Non dichiararla distribuita o verificata in runtime senza evidenza.
-- `supabase/config.toml` contiene configurazione Supabase del progetto; il database live si modifica soltanto con autorizzazione esplicita.
-- La UI usa tema chiaro/scuro. Non introdurre SQLite, server residenti sulla VM, bot, funzionalità offline o sincronizzazione; app mobile nativa e scorciatoia per il workout del giorno sono backlog, non requisiti impliciti.
+- `frontend/` contiene la PWA Vue, i sorgenti, la configurazione Vite e il lockfile del frontend; verificare sempre il tree prima di riferire un simbolo.
+- `backend/supabase/` contiene configurazione Supabase e sorgenti locali delle Edge Functions. Non dichiararle distribuite o verificate in runtime senza evidenza.
+- `mobile/` contiene uno scaffold iniziale Expo/React Native con manifest e schermata segnaposto; dipendenze, build e runtime non sono verificati.
+- La UI web usa tema chiaro/scuro. Non introdurre SQLite, server residenti sulla VM, bot, funzionalità offline o sincronizzazione. L’app mobile nativa è una direzione concordata; seguire `docs/architecture-decisions.md` e `docs/todo.md`. La scorciatoia per il workout del giorno è già documentata come implementata.
 
 ## 3. Schema dati e integrità
 
@@ -43,7 +43,9 @@ Queste istruzioni valgono per l’intera repository SickFit e prevalgono sulle c
 
 ## 6. Documentazione e wiki
 
-- `README.md`: stato, setup e limiti operativi del progetto.
+- `README.md`: stato, setup e limiti operativi del monorepo.
+- `docs/`: decisioni architetturali e documenti di pianificazione.
+- `docs/todo.md`: stato delle attività e dei prossimi passi.
 - `SCHEMA.md`: modello dati, vincoli, relazioni, sicurezza osservata, accesso dati e contratti API.
 - `wiki/index.md`: indice della wiki SickFit; `wiki/overview.md`: panoramica funzionale/tecnica.
 - Prima di modificare documentazione, leggi `SCHEMA.md`, `wiki/index.md`, le pagine target e le sorgenti pertinenti. Aggiorna la wiki di SickFit e gli indici/link coinvolti nella stessa attività.
