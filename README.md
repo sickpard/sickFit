@@ -1,6 +1,6 @@
 # SickFit
 
-Monorepo SickFit per web, backend condiviso e futura app mobile. Il frontend attuale è una PWA mobile-first Vue 3 + TypeScript + Vite; usa Supabase Auth e Postgres con RLS. La direzione concordata è Supabase Edge Functions per il backend e Expo/React Native per il client mobile; questi componenti sono ancora in fase iniziale.
+Monorepo SickFit per la PWA web, i servizi Supabase e uno scaffold mobile nativo. Il frontend Vue 3 + TypeScript + Vite usa Supabase Auth e Postgres con RLS. `backend/` contiene configurazione e una Edge Function per il login, non un’API di dominio condivisa; `mobile/` contiene solo una schermata Expo/React Native segnaposto.
 
 ## Stato
 
@@ -62,3 +62,4 @@ La PWA Vue è stata spostata in `frontend/` nella repository esistente. La crono
 - [SCHEMA.md](./SCHEMA.md) documenta il modello dati e i contratti API osservati, distinguendo i dati verificati dalle lacune.
 - [TODO del progetto](./docs/todo.md) registra attività completate e ancora aperte.
 - La [wiki SickFit](./wiki/index.md) raccoglie panoramica e collegamenti alla documentazione di progetto.
+- Schemi dei componenti: [frontend web/PWA](./docs/components/frontend/SCHEMA.md), [backend Supabase](./docs/components/backend/SCHEMA.md) e [app mobile nativa](./docs/components/mobile/SCHEMA.md). Gli schemi descrivono il codice presente e distinguono ciò che è ancora solo previsto.

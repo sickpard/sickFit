@@ -1,6 +1,7 @@
 # AGENTS.md — mobile SickFit
 
 ## Decisioni
+- Prima di modificare lo scaffold mobile leggi [`SCHEMA.md`](../docs/components/mobile/SCHEMA.md), `../AGENTS.md` e `README.md`.
 - Tecnologia scelta: Expo/React Native con TypeScript, per Android e iOS.
 - Deve essere una vera app nativa, non un wrapper WebView.
 - Usare gli stessi account Supabase Auth, backend e dati SickFit; non duplicare identità o database.

@@ -8,13 +8,13 @@ SickFit è una PWA mobile-first in italiano per gestire schede di allenamento, r
 
 ## Architettura
 
-- **Frontend:** `frontend/`, Vue 3, TypeScript e Vite; al momento presenta l’app e accede direttamente a Supabase.
+- **Frontend:** `frontend/`, Vue 3, TypeScript e Vite; PWA responsive con accesso diretto a Supabase Auth/Data API.
 - **Autenticazione e dati:** Supabase Auth e PostgreSQL con RLS.
-- **Backend:** direzione concordata — Supabase Edge Functions in TypeScript/Deno. `backend/supabase/functions/login-with-username` è sorgente locale preesistente, non risulta deployata o provata e non costituisce ancora un’API condivisa di dominio.
-- **Mobile:** direzione concordata — Expo/React Native per Android e iOS. `mobile/` contiene ora uno scaffold TypeScript minimale con schermata segnaposto; dipendenze non installate, autenticazione e funzioni di prodotto non implementate.
+- **Backend:** `backend/supabase/` contiene configurazione e sorgente della Edge Function `login-with-username`. La funzione non risulta deployata o provata; non esiste ancora un’API condivisa di dominio.
+- **Mobile:** `mobile/` contiene uno scaffold Expo/React Native TypeScript con una schermata segnaposto per Android/iOS; auth, navigazione, funzioni di prodotto e dipendenze installate non sono presenti/verificati.
 - **PWA:** manifest e icone sono presenti; disponibilità installabile dipende dall’hosting HTTPS e dal browser.
 
-La struttura è stata organizzata come monorepo (`frontend/`, `backend/`, `mobile/`, `docs/`, `wiki/`) senza creare un secondo provider: il database e l’identità restano Supabase. La direzione per backend e mobile è concordata; l’API condivisa e le funzioni applicative mobile non sono ancora implementate. Le attività aperte sono nel [TODO](../docs/todo.md).
+La struttura è un monorepo (`frontend/`, `backend/`, `mobile/`, `docs/`, `wiki/`) senza provider o database duplicati: identità e dati restano Supabase. L’API condivisa e le funzioni applicative mobile non sono ancora implementate. Vedere gli schemi di [frontend](../docs/components/frontend/SCHEMA.md), [backend](../docs/components/backend/SCHEMA.md) e [mobile](../docs/components/mobile/SCHEMA.md), e il [TODO](../docs/todo.md).
 
 ## Funzioni presenti secondo la documentazione di progetto
 

@@ -1,6 +1,7 @@
 # AGENTS.md — frontend SickFit
 
 ## Ambito e stato
+- Prima di modificare il frontend leggi [`SCHEMA.md`](../docs/components/frontend/SCHEMA.md), `../AGENTS.md` e `README.md`.
 - Questa directory contiene la PWA esistente Vue 3 + TypeScript + Vite e il relativo manifest/lockfile.
 - Il frontend usa attualmente Supabase Auth e PostgREST direttamente; l’API condivisa con l’app mobile non è ancora implementata.
 - Vite carica gli env dalla root del monorepo tramite `envDir: '..'`. `.env.local` è ignorato: non leggerlo, stamparlo o copiarlo.

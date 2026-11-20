@@ -12,4 +12,4 @@ Non sono presenti qui nuove dipendenze o un runtime Node separato. Non leggere n
 
 Prima di aggiungere endpoint, definire risorse e contratto versionato, autenticazione JWT, propagazione del contesto utente/RLS, validazione, autorizzazione, limiti richieste, logging ed errori. Il passaggio dal client diretto all’API dovrà essere graduale e senza doppie scritture.
 
-Vedere `../docs/architecture-decisions.md`, `../SCHEMA.md` e `../AGENTS.md`.
+Vedere [`SCHEMA.md`](../docs/components/backend/SCHEMA.md), `../docs/architecture-decisions.md`, `../SCHEMA.md` e `../AGENTS.md`.
