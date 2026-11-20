@@ -14,7 +14,7 @@ Gestisce signup, login e sessione dell’utente. Il frontend usa Supabase JS con
 
 ### PostgreSQL e Data API
 
-- Il database applicativo è nello schema `public`; il modello osservato è descritto nel [SCHEMA dati alla root](../../../SCHEMA.md).
+- Il database applicativo è nello schema `public`; il modello osservato è descritto nel [contratto dati/API](../../data-and-api-schema.md).
 - Supabase JS invia richieste al database/PostgREST dal browser con publishable key e token della sessione. Per le query di prodotto non c’è un server applicativo intermedio.
 - L’isolamento per utente dipende da RLS, grants e vincoli effettivi. Il fatto che RLS sia abilitata non prova da solo che ogni policy sia corretta.
 - Non dedurre DDL, policy o migrazioni da questo file e non rieseguire SQL senza verifica live e autorizzazione.

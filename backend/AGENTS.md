@@ -14,6 +14,6 @@
 - Non modificare database, policy, grants, impostazioni Auth o deploy senza autorizzazione esplicita.
 
 ## Verifiche e documentazione
-- Confrontare cambi a query o contratto con `../SCHEMA.md` e `../docs/architecture-decisions.md`.
+- Confrontare cambi a query o contratto con `../docs/data-and-api-schema.md` e `../docs/architecture-decisions.md`.
 - Su questa macchina sono ammesse solo verifiche statiche leggere; niente installazioni, test, build o runtime.
 - Aggiornare README, decisioni e wiki quando cambia lo stato effettivo. Nessun commit o push senza richiesta esplicita.

@@ -39,7 +39,7 @@ Signup usa email/password e username in metadata. Il login username/email/passwo
 - L’avvio crea una riga `workout_sessions`; il completamento registra `workout_exercises`, `exercise_sets` e `set_notes`, poi aggiorna la sessione. Sono richieste Supabase separate, non un’unica transazione atomica lato browser.
 - Lo storico carica fino a 50 sessioni e risolve i nomi correlati con query ulteriori. L’isolamento e i vincoli devono essere garantiti da database/RLS, non dai soli controlli UI.
 
-Per colonne, FK, regole dati e limiti di introspezione, usare il [modello database/API alla root](../../../SCHEMA.md).
+Per colonne, FK, regole dati e limiti di introspezione, usare il [contratto dati/API](../../data-and-api-schema.md).
 
 ## Confine backend e sicurezza
 

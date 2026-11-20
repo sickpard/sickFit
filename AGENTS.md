@@ -1,62 +1,43 @@
-# AGENTS.md — istruzioni operative SickFit
+# AGENTS.md — SickFit
 
-Queste istruzioni valgono per l’intera repository SickFit e prevalgono sulle convenzioni generiche quando più restrittive. Applicarle con `README.md`, `SCHEMA.md`, la wiki di progetto e le richieste correnti dell’utente.
+Queste istruzioni valgono per l’intero monorepo SickFit. Leggerle insieme a `README.md`, `SCHEMA.md` e alle pagine wiki pertinenti prima di intervenire.
 
-## 1. Prima di intervenire
+## Ambito e architettura verificata
 
-1. Verifica di essere nella root `/home/ubuntu/projects/personal/sickfit`; controlla branch e working tree e conserva ogni modifica preesistente.
-2. Leggi questo file, `README.md`, `SCHEMA.md` e le pagine pertinenti di `wiki/`; ispeziona configurazione e sorgenti direttamente coinvolti. Non dedurre percorsi o funzionalità dai nomi.
-3. Consulta `~/wiki/README.md`, `~/GUIDE/README.md` e la guida operativa pertinente prima di attività che ricadono nelle regole della VM.
-4. Non leggere, stampare, copiare o registrare contenuti da file `.env*`, token, password, chiavi private o credenziali. `.env.example` può essere esaminato solo per i nomi delle variabili e i placeholder.
+- `frontend/`: PWA web mobile-first Vue 3 + TypeScript + Vite; usa Supabase Auth e Data API direttamente. È online-only; manifest e icone sono presenti, ma non risulta un service worker.
+- `backend/supabase/`: configurazione Supabase e sorgente locale della Edge Function `login-with-username`. Il codice presente non prova che la funzione sia stata distribuita o testata.
+- `mobile/`: scaffold iniziale Expo/React Native con schermata segnaposto; autenticazione, funzioni di prodotto e runtime non sono implementati/verificati.
+- `docs/`: decisioni, attività e documentazione dei componenti. `docs/data-and-api-schema.md` conserva il contratto dati/API; `docs/components/*/SCHEMA.md` descrivono frontend, backend e mobile.
+- `wiki/`: documentazione funzionale e tecnica secondo lo schema alla root. La specifica editoriale del manuale utente è `wiki/user-manual-schema.md`.
 
-## 2. Ambito e architettura verificata
+## Prima di modificare
 
-- SickFit è un monorepo per una PWA web Vue 3/TypeScript/Vite, servizi Supabase e uno scaffold nativo mobile Expo/React Native. La web app usa Supabase Auth/PostgreSQL; backend applicativo condiviso e funzionalità mobile non sono ancora implementati.
-- `frontend/` contiene la PWA Vue, i sorgenti, la configurazione Vite e il lockfile del frontend; verificare sempre il tree prima di riferire un simbolo.
-- `backend/supabase/` contiene configurazione Supabase e sorgenti locali delle Edge Functions. Non dichiararle distribuite o verificate in runtime senza evidenza.
-- `mobile/` contiene uno scaffold iniziale Expo/React Native con manifest e schermata segnaposto; dipendenze, build e runtime non sono verificati.
-- La UI web usa tema chiaro/scuro. Lo scaffold mobile è solo una schermata segnaposto: non aggiungere SQLite, server residenti sulla VM, bot, funzionalità offline o sincronizzazione. Seguire `docs/architecture-decisions.md` e `docs/todo.md`; la scorciatoia per il workout del giorno è documentata come implementata.
+1. Verificare root Git, branch, remote e `git status --short --branch`; preservare il lavoro preesistente.
+2. Consultare `SCHEMA.md`, `wiki/index.md`, l’overview e le pagine rilevanti; poi verificare manifest, configurazioni e sorgenti interessati.
+3. Non leggere, stampare, copiare o registrare `.env*`, token, password, chiavi private o credenziali. Nei file d’esempio usare solo placeholder.
+4. Non dedurre funzionalità, API, policy, deployment o percorsi dal nome di una directory o da un requisito.
 
-## 3. Schema dati e integrità
+## Sicurezza e vincoli operativi
 
-- `SCHEMA.md` alla root è il riferimento canonico del modello dati e dei contratti API osservati. Descrive esclusivamente fatti verificati e separa requisiti di prodotto, metadati DB e lacune.
-- Prima di modificare query, tipi, persistenza, autenticazione o funzioni Supabase, confronta l’implementazione con `SCHEMA.md` e con le migrazioni/sorgenti realmente disponibili.
-- Ogni modifica autorizzata a tabelle, colonne, default, vincoli, relazioni, indici, RLS/grants, trigger o contratti API richiede l’aggiornamento contestuale di `SCHEMA.md` e della wiki. Non inventare DDL o comportamento non esposto dalle fonti; marca i dati ignoti come non verificati.
-- L’isolamento per utente deve dipendere da RLS, non solo da filtri UI. Non modificare policy, grants, database o deploy senza autorizzazione esplicita.
-- Le sessioni storiche devono restare associate alla versione di piano originaria. Non alterare gli allenamenti passati quando cambiano le schede.
-- Il numero di serie prescritto è indicativo; le registrazioni possono avere più o meno serie o esercizi saltati. Carichi in kg, senza conversioni implicite.
+- In questa VM sono consentite solo modifiche e verifiche statiche leggere. Non eseguire installazioni, test, build, compilazioni o avvio dell’app/dev server; non aggirare Heavyguard o altri controlli.
+- Non usare una chiave `service_role` nel browser. Segreti server-side restano nell’ambiente Supabase e non devono comparire in frontend, Git o documentazione.
+- Non modificare database, policy, grants, Auth, funzioni remote o deploy senza autorizzazione esplicita e verifica live dei prerequisiti.
+- Le sessioni storiche devono restare associate alla versione di scheda originaria; carichi in kg e valori `per_side`/`total` non vanno convertiti implicitamente.
 
-## 4. Sicurezza e limiti operativi
+## Convenzioni
 
-- L’utente autorizza in modo continuativo soltanto modifiche con verifiche statiche sulla VM.
-- Non eseguire sulla VM installazioni (inclusi `npm install`/`npm ci`), test, build, compilazioni o avvio dell’app/dev server. Non aggirare heavyguard con altri strumenti o ambienti sulla VM. Dichiarare tali verifiche non eseguite.
-- Non usare una chiave `service_role` nel browser; il frontend può usare solo URL e publishable key. Segreti server-side restano in ambiente Supabase, mai in frontend, Git o documentazione.
-- Prima di rendere pubblica/deployare la Edge Function, servono autorizzazione esplicita e revisione di rate limiting, CORS e gestione segreti.
-- Nessun commit, push, release o deploy senza richiesta esplicita dell’utente.
+- Preservare componenti, route, chiavi di localizzazione, identificatori e contratti serializzati esistenti.
+- I testi dell’interfaccia sono in italiano; mantenere letterali nomi di tabelle, campi e valori di protocollo.
+- Non introdurre dipendenze o artefatti generati senza necessità verificata e autorizzazione.
+- Distinguere sempre codice presente, requisiti, proposte e comportamento verificato in runtime.
 
-## 5. Convenzioni di codice
+## Documentazione
 
-- Preserva confini esistenti di componenti, template, stili, helper, chiavi di localizzazione, estensioni, endpoint, campi backend e contratti serializzati.
-- Testi UI in italiano, coerenti con le convenzioni presenti. Mantieni letterali nomi di tabella/campo, valori di protocollo e identificatori.
-- Mantieni separati stato di configurazione, stato runtime e stato di vista; evita logica duplicata tra componenti.
-- Non aggiungere dipendenze, build artifact (`dist/`) o file generati senza necessità verificata e autorizzazione.
+- `SCHEMA.md` definisce le regole della wiki; non è il modello PostgreSQL/API.
+- `docs/data-and-api-schema.md` è il riferimento dati/API e dichiara esplicitamente i limiti dell’introspezione.
+- `wiki/index.md` è l’indice; `wiki/overview.md` descrive il monorepo; le aree e sezioni vivono sotto `wiki/`.
+- Dopo ogni modifica documentale aggiornare la wiki e i link interessati. Aggiornare anche la voce SickFit in `~/wiki/progetti.md` quando cambia lo stato documentale o tecnico.
 
-## 6. Documentazione e wiki
+## Verifica e consegna
 
-- `README.md`: stato, setup e limiti operativi del monorepo.
-- `docs/`: decisioni architetturali e documenti di pianificazione.
-- `docs/todo.md`: stato delle attività e dei prossimi passi.
-- `SCHEMA.md`: modello dati, vincoli, relazioni, sicurezza osservata, accesso dati e contratti API.
-- `docs/components/frontend/SCHEMA.md`, `docs/components/backend/SCHEMA.md`, `docs/components/mobile/SCHEMA.md`: struttura e stato reale dei tre componenti, distinguendo implementato e target.
-- `wiki/SCHEMA.md`: schema editoriale del manuale utente, distinto dal modello dati alla root.
-- `wiki/index.md`: indice della wiki SickFit; `wiki/overview.md`: panoramica funzionale/tecnica.
-- Prima di modificare documentazione, leggi `SCHEMA.md`, `wiki/index.md`, le pagine target e le sorgenti pertinenti. Aggiorna la wiki di SickFit e gli indici/link coinvolti nella stessa attività.
-- Dopo modifiche rilevanti al progetto aggiorna anche la voce SickFit in `~/wiki/progetti.md`; aggiorna TODO solo quando cambia lo stato di un’attività aperta.
-- Distingui comportamento implementato, requisiti, esempi e ipotesi. Non inventare dati di prodotto, capacità, versioni, autori, policy o conformità normativa.
-
-## 7. Verifica e consegna
-
-- In questa VM sono ammesse solo verifiche statiche leggere e non invasive, ad esempio ispezione mirata dei file e `git diff --check`.
-- Esegui `git diff --check` e `git status --short` prima della consegna, se consentito; non eseguire test, build, installazioni o runtime.
-- Riporta esattamente quali controlli sono stati eseguiti e quali restano non verificati. Non affermare correttezza runtime, sicurezza completa o deploy senza prove.
-- Non eliminare o sovrascrivere modifiche non correlate. Nessun commit o push senza richiesta esplicita.
+Eseguire soltanto controlli statici leggeri autorizzati, inclusi `git diff --check` e controlli dei link. Dichiarare test, build, runtime e deploy non eseguiti. Prima della consegna verificare `git status --short` e preservare file non pertinenti. Commit e push richiedono autorizzazione esplicita per l’incarico corrente.

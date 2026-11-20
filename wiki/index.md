@@ -1,15 +1,29 @@
-# Wiki SickFit
+# SickFit — Wiki
 
-Documentazione tecnica e funzionale del progetto.
+Mappa della documentazione funzionale e tecnica. La prosa delle pagine è in italiano; lo schema editoriale è alla root del progetto.
 
-- [Panoramica del progetto](./overview.md)
-- [SCHEMA frontend](../docs/components/frontend/SCHEMA.md)
-- [SCHEMA backend Supabase](../docs/components/backend/SCHEMA.md)
-- [SCHEMA app mobile nativa](../docs/components/mobile/SCHEMA.md) — scaffold Expo/React Native iniziale, non ancora collegato a auth o dati.
-- [Schema editoriale del manuale utente](./SCHEMA.md) — struttura e placeholder; non è lo schema del database.
-- [Handoff backend SickFit e SickTracker](./backend-handoff-sickfit-sicktracker.md) — discovery, cloni fratelli, verifiche provider e prompt per Hermes sul SickPC.
-- [Schema database e contratti API](../SCHEMA.md) — riferimento per il modello dati `public`, i vincoli e i contratti osservati; lacune esplicitamente indicate.
-- [Istruzioni per agenti e contributor](../AGENTS.md)
-- [README e ambiente di sviluppo](../README.md)
-- [Decisioni architetturali monorepo](../docs/architecture-decisions.md)
-- [TODO e stato delle attività](../docs/todo.md)
+## Panoramica
+
+- [Overview del monorepo](overview.md)
+- [Schema della documentazione](../SCHEMA.md)
+
+## Aree
+
+- [Prodotto e flussi di allenamento](product/overview.md)
+  - [Schede, sessioni e storico](product/training-workflows.md)
+- [Componenti e confini](components/overview.md)
+  - [Frontend web/PWA](components/frontend.md)
+  - [Servizi Supabase](components/backend.md)
+  - [Scaffold mobile nativo](components/mobile.md)
+
+## Riferimenti collegati
+
+- [Contratto dati e API](../docs/data-and-api-schema.md)
+- [Schema componente frontend](../docs/components/frontend/SCHEMA.md)
+- [Schema componente backend](../docs/components/backend/SCHEMA.md)
+- [Schema componente mobile](../docs/components/mobile/SCHEMA.md)
+- [Schema editoriale del manuale utente](user-manual-schema.md)
+- [Decisioni architetturali](../docs/architecture-decisions.md)
+- [TODO](../docs/todo.md)
+- [Handoff backend SickFit/SickTracker](backend-handoff-sickfit-sicktracker.md)
+- [README](../README.md) · [AGENTS](../AGENTS.md)
