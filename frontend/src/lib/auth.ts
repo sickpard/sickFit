@@ -17,28 +17,32 @@ export async function signInWithUsername(input: {
   password: string
 }) {
   const client = requireSupabase()
-  const { data, error } = await client.functions.invoke('login-with-username', {
-    body: {
-      username: normalizeUsername(input.username),
-      email: input.email.trim().toLowerCase(),
-      password: input.password,
-    },
+  const invalidCredentials = 'Accesso non riuscito. Controlla i dati e riprova.'
+  const { data, error } = await client.auth.signInWithPassword({
+    email: input.email.trim().toLowerCase(),
+    password: input.password,
   })
+  if (error || !data.user || !data.session) throw new Error(invalidCredentials)
 
-  if (error) throw new Error('Accesso non riuscito. Controlla i dati e riprova.')
-
-  const session = data?.session ?? data
-  if (!session?.access_token || !session?.refresh_token) {
-    throw new Error('Il servizio di accesso non ha restituito una sessione valida.')
+  try {
+    // Only read the authenticated user's profile through its RLS policy.
+    const { data: profile, error: profileError } = await client.from('profiles')
+      .select('username_normalized')
+      .eq('id', data.user.id)
+      .single()
+    if (profileError || profile?.username_normalized !== normalizeUsername(input.username)) {
+      throw new Error(invalidCredentials)
+    }
+    return data
+  } catch {
+    try {
+      const { error: signOutError } = await client.auth.signOut({ scope: 'local' })
+      if (signOutError) await client.auth.signOut({ scope: 'local' })
+    } catch {
+      await client.auth.signOut({ scope: 'local' }).catch(() => undefined)
+    }
+    throw new Error(invalidCredentials)
   }
-
-  const { data: sessionData, error: sessionError } = await client.auth.setSession({
-    access_token: session.access_token,
-    refresh_token: session.refresh_token,
-  })
-
-  if (sessionError) throw new Error('Non è stato possibile avviare la sessione.')
-  return sessionData
 }
 
 export async function signUpWithUsername(input: {

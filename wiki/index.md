@@ -9,3 +9,5 @@ Documentazione tecnica e funzionale del progetto.
 - [README e ambiente di sviluppo](../README.md)
 - [Decisioni architetturali monorepo](../docs/architecture-decisions.md)
 - [TODO e stato delle attività](../docs/todo.md)
+- [Contratto API locale v1](../docs/api-contract.md) — proposta implementata nei sorgenti locali, non distribuita.
+- [SQL RPC di dominio](../docs/sickfit-domain.sql) — eseguito nel progetto SickFit il 21 novembre 2026; readback catalogo completato, comportamento non testato.

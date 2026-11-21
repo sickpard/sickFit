@@ -56,7 +56,9 @@ Le regole di prodotto di questa sezione sono requisiti documentati; non tutte so
 | `username` | `text` | No | — | Trim obbligatorio; regex `^[A-Za-z0-9._-]{3,32}$` |
 | `username_normalized` | `text` | Sì secondo metadati | Generata: `lower(btrim(username))` | Unica secondo metadati; usata per lookup case-insensitive |
 | `created_at` | `timestamptz` | No | `now()` | Creazione |
-| `updated_at` | `timestamptz` | No | `now()` | Ultimo aggiornamento; trigger effettivo non esposto dall’introspezione |
+| `updated_at` | `timestamptz` | No | `now()` | Ultimo aggiornamento; trigger `profiles_set_updated_at` verificato nel catalogo |
+
+Readback catalogo del 21 novembre 2026: `auth.users` ha il trigger `on_auth_user_created`, che invoca `public.handle_new_auth_user()` (`SECURITY DEFINER`, `search_path` vuoto). La funzione inserisce `profiles(id, username)` usando `btrim(new.raw_user_meta_data->>'username')`. La registrazione web/mobile invia `username` come user metadata; la creazione manuale di un utente senza tale metadata può fallire o non produrre un profilo valido. Il trigger è stato letto nel catalogo, non provato con una nuova registrazione.
 
 ### 3.2 `training_plans` — schede di allenamento
 
@@ -245,25 +247,28 @@ L’import JSON/Notion e le relative regole di validazione non sono ancora imple
 
 ## 7. Accesso dati e query pattern
 
-Il frontend in `frontend/` usa `@supabase/supabase-js` con `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`. La chiave `service_role` non deve mai essere usata nel frontend.
+Il frontend in `frontend/` usa `@supabase/supabase-js` con `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`; il mobile usa `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. La chiave `service_role` non deve mai essere usata nei client. Il codice locale attuale instrada le operazioni di dominio via Edge Function `domain`; Auth è diretto, con lettura del solo `profiles.username_normalized` del profilo autenticato. Questa lettura dipende da una policy SELECT RLS che non è stata ricontrollata live.
 
-Pattern letti nei sorgenti:
+Pattern nel contratto locale `domain` (sorgente non distribuito):
 
-1. Schede: `training_plans`, filtro `archived_at IS NULL`, ordine `created_at DESC`.
-2. Per ogni scheda: ultima `plan_versions` ordinata per `version_number DESC`, limite 1; poi giorni, esercizi e alternative ordinati per `position`.
-3. Sessione: inserimento in `workout_sessions`, poi `workout_exercises`, `exercise_sets` e `set_notes`; infine aggiornamento sessione a `completed` con `completed_at`.
-4. Storico: ultime 50 sessioni ordinate per `started_at DESC`, con lookup dei nomi di giorno, versione e scheda.
-5. I filtri/proprietà che isolano i dati per utente devono restare garantiti da RLS; il comportamento effettivo delle policy non viene dedotto dalle query UI.
+1. `plans.list`: legge schede non archiviate, versioni, giorni, esercizi e alternative sotto il JWT/RLS del chiamante; restituisce la versione più recente.
+2. `plans.save`: usa RPC transazionale per creare piano/versione o nuova versione senza riscrivere lo storico.
+3. `workouts.start`, `workouts.complete` e `workouts.cancel`: RPC transazionali; completamento scrive esercizi, serie, durata e note e poi chiude la sessione.
+4. `history.list` e `history.detail`: letture sotto il JWT/RLS; include le sessioni aperte oltre alle 50 più recenti.
+5. I filtri applicativi per `user_id` non sostituiscono RLS. Policy, grants e comportamento effettivo non sono stati verificati live per questa implementazione.
+
+Il pattern diretto usato dalla versione precedente della PWA è storico e non descrive più il flusso di dominio corrente nel tree. L’API/RPC attuale resta da verificare e distribuire.
 
 Non sono documentati piani di query, volumi attesi, benchmark o soglie di latenza. Non inventare target di performance; aggiungerli solo dopo una decisione di prodotto e misurazioni concordate.
 
 ## 8. Contratti API e autenticazione
 
-### Frontend → Supabase Auth
+### Client → Supabase Auth
 
-- Registrazione: `auth.signUp` con email normalizzata in minuscolo, password e `username` in `user_metadata`. Il client può ricevere sessione oppure richiesta di conferma email.
+- Registrazione web: `auth.signUp` con email normalizzata in minuscolo, password e `username` in `user_metadata`; il trigger live `on_auth_user_created` usa tale campo per creare il profilo. Il client può ricevere sessione oppure richiesta di conferma email. Il sorgente web non passa `emailRedirectTo`, quindi il redirect di conferma dipende dal `Site URL` configurato in Supabase Auth.
 - Stato sessione: persistenza, auto-refresh e rilevazione callback URL sono abilitate nella configurazione client.
-- Le tabelle `public` sono raggiunte tramite Supabase JS/PostgREST; non esistono nel tree contratti REST custom separati per ciascuna tabella.
+- Registrazione e login nel web/mobile restano Supabase Auth diretto. Il login a tre campi effettua `signInWithPassword`, poi legge `profiles.username_normalized` per il solo utente autenticato sotto RLS; questo richiede policy SELECT compatibile e non è stato verificato live.
+- Recupero password mobile usa redirect `sickfit://auth/callback`; configurazione e callback sono solo codice locale e richiedono allowlist Auth e test su dispositivo.
 
 ### Edge Function `login-with-username` — sola implementazione locale
 
@@ -278,19 +283,28 @@ Non sono documentati piani di query, volumi attesi, benchmark o soglie di latenz
 
 **Stato di distribuzione:** la funzione è solo sorgente locale e non risulta deployata/provata secondo README e AGENTS.md. Il contratto sopra descrive il sorgente, non un endpoint pubblicamente disponibile. Rate limiting e verifica della configurazione CORS restano prerequisiti di sicurezza prima di un deploy.
 
+### Edge Function `domain` — proposta locale v1
+
+- Sorgente locale: `backend/supabase/functions/domain/index.ts`; configurazione `verify_jwt = true` in `backend/supabase/config.toml`.
+- Azioni: `plans.list`, `plans.save`, `plans.archive`, `workouts.start`, `workouts.complete`, `workouts.cancel`, `history.list`, `history.detail`. Contratto e payload sono in [`docs/api-contract.md`](docs/api-contract.md) e nel README della funzione.
+- La funzione richiede un JWT Supabase valido, chiama `auth.getUser(token)`, crea un client per richiesta con publishable key e bearer JWT e passa alle query/RPC il contesto utente, dipendendo da RLS e grants; non usa `service_role` e non accetta `user_id` dal payload.
+- Le scritture chiamano cinque RPC `SECURITY INVOKER` descritte in [`docs/sickfit-domain.sql`](docs/sickfit-domain.sql). L’utente ha eseguito lo script nel progetto SickFit il 21 novembre 2026. Readback catalogo successivo: tutte e cinque le funzioni presenti con `search_path` vuoto e permesso EXECUTE ad `authenticated`; RLS attiva sulle nove tabelle di dominio, una policy owner-scoped `ALL` per tabella, e privilegi effettivi `authenticated` per i permessi richiesti dalle RPC.
+- Lo stesso readback ha confermato le colonne richieste (incl. `exercise_sets.duration_seconds`), constraint/FK rilevanti e trigger `updated_at` su `training_plans` e `workout_sessions`. Non sono state invocate le RPC, testate transazioni/isolamento con utenti reali né distribuita l’Edge Function.
+- **Stato:** sorgente Edge locale non distribuito e non testato. CORS, rate limiting/quote, comportamento runtime, Auth/profile RLS, e client mobile richiedono verifica prima di qualsiasi deploy.
+
 ## 9. Migrazioni e storia dello schema
 
-- `mcp__supabase__list_migrations` ha restituito un elenco vuoto alla verifica.
-- La ricerca nel tree locale `backend/supabase/` non ha trovato file di migrazione `.sql`; `backend/supabase/config.toml` identifica il progetto e configura `login-with-username`.
+- `mcp__supabase__list_migrations` aveva restituito un elenco vuoto nella verifica precedente; il successivo readback catalogo ha verificato le funzioni, ma non la registrazione della query manuale come migrazione.
+- `docs/sickfit-domain.sql` è stato eseguito manualmente dall’utente il 21 novembre 2026; non è una migration Supabase locale/registrata. `backend/supabase/config.toml` configura localmente `login-with-username` e `domain`; la configurazione locale non attesta il deploy della Edge Function.
 - Non sono quindi determinati numero di versione DB, date/autori delle migrazioni o motivazioni delle modifiche DDL. Non interpretare un elenco vuoto come prova che lo schema non sia mai stato modificato.
 - Quando saranno introdotte migrazioni autorizzate, registrare in questa sezione ID, data, motivazione e oggetti toccati, senza sostituire i sorgenti di migrazione.
 
 ## 10. Sicurezza e limiti di verifica
 
-- Dati utente: isolamento tramite RLS richiesto; RLS enabled è verificato, ma policy e grants non sono enumerati in questo documento.
-- Credenziali: solo publishable key nel client; service role esclusivamente server-side nella Edge Function.
+- Dati utente: readback catalogo del 21 novembre 2026 ha verificato RLS abilitata e policy owner-scoped `ALL` sulle nove tabelle di dominio, oltre ai privilegi tabellari effettivi necessari alle RPC. L’isolamento effettivo fra account non è stato provato con richieste runtime.
+- Credenziali: solo publishable key nel client; l’Edge Function `domain` non usa `service_role`, che non deve essere inserita nel frontend.
 - Non esporre token, password, chiavi o dati personali nei log e in SCHEMA.md.
-- Nessuna query con dati utente è stata eseguita per produrre questo documento; il tool ha riportato zero righe per ogni tabella.
+- Nessuna query su righe applicative o dati personali è stata eseguita per produrre questo documento; le verifiche successive al run hanno letto solo cataloghi e metadati.
 - Questa documentazione non è un audit di sicurezza e non certifica correttezza, completezza o conformità delle policy.
 
 ## 11. Aggiornamento e fonti
@@ -299,8 +313,8 @@ Aggiornare questo documento nella stessa modifica approvata che cambia tabelle, 
 
 Fonti controllate per questa revisione:
 
-- Catalogo Supabase `public` tramite tool read-only `list_tables` (`verbose=true`), progetto `blljepmetnvfriqjdpcn`.
+- Catalogo Supabase tramite query read-only su colonne, constraint/FK, policy, privilegi effettivi, funzioni, RLS e trigger, progetto SickFit, 21 novembre 2026.
 - Elenco migrazioni Supabase tramite tool read-only `list_migrations`.
-- Sorgenti locali: `frontend/package.json`, `frontend/src/lib/supabase.ts`, `frontend/src/lib/auth.ts`, `frontend/src/App.vue`, `backend/supabase/config.toml`, `backend/supabase/functions/login-with-username/index.ts`, `README.md`, `AGENTS.md`.
+- Sorgenti locali (stato da ricontrollare attentamente): `frontend/package.json`, `frontend/src/lib/supabase.ts`, `frontend/src/lib/auth.ts`, `frontend/src/lib/domain.ts`, `frontend/src/App.vue`, `backend/supabase/config.toml`, `backend/supabase/functions/login-with-username/index.ts`, `backend/supabase/functions/domain/index.ts`, `docs/sickfit-domain.sql`, `mobile/`, README e AGENTS.
 
-Dati non esposti dalle fonti disponibili — DDL integrale, indici completi, policy RLS/grants dettagliati, definizioni trigger, clausole di cancellazione e storia effettiva delle migrazioni — restano da verificare prima di documentarli come fatti.
+Dati ancora da verificare — comportamento runtime delle RPC, isolamento con account distinti, CORS/limiti, Auth/profile policies, definizione completa degli indici e registrazione della query manuale nella storia delle migrazioni — restano aperti prima di dichiarare il rilascio pronto.

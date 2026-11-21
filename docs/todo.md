@@ -1,41 +1,40 @@
 # TODO — SickFit
 
-**Aggiornato:** 19 novembre 2026. Stato locale del monorepo; nessuna modifica remota o deploy effettuati.
+**Aggiornato:** 21 novembre 2026. L’utente ha eseguito `docs/sickfit-domain.sql` nel progetto Supabase SickFit. Un successivo readback catalogo in sola lettura ha confermato cinque RPC `SECURITY INVOKER`, RLS/policy owner-scoped sulle nove tabelle di dominio, privilegi effettivi richiesti, colonne/constraint/FK e trigger `updated_at`. **RICONTROLLO ATTENTO OBBLIGATORIO:** verificare componente per componente cosa è stato effettivamente completato e cosa no; la presenza dei sorgenti o delle funzioni non prova comportamento runtime, isolamento o integrazione. Nessuna RPC è stata invocata e l’Edge Function non è stata distribuita; installazione, test, build e runtime restano non eseguiti.
 
-## Completato in questa fase
+## Implementato nel tree — DA RICONTROLLARE ATTENTAMENTE
 
-- [x] Organizzata la repository esistente come monorepo senza submodule.
-- [x] Spostata la PWA Vue in `frontend/`, mantenendo il package manifest e il lockfile del frontend; Vite legge gli env dalla root monorepo.
-- [x] Spostate configurazione Supabase e sorgente della Edge Function esistente in `backend/supabase/`.
-- [x] Confermate le direzioni: Supabase Edge Functions con TypeScript/Deno per il backend; Expo/React Native con TypeScript per Android/iOS.
-- [x] Creato uno scaffold mobile minimo con manifest Expo, bootstrap TypeScript e schermata segnaposto.
-- [x] Aggiornati README, SCHEMA, wiki e istruzioni operative per riflettere la nuova struttura.
+- [ ] **Backend locale:** Edge Function `domain` con schede, sessioni e storico; validazione, risposte strutturate, JWT utente e client RLS per richiesta; `verify_jwt = true`. Le sessioni aperte restano visibili e l’avvio è serializzato per utente. Ricontrollare codice, CORS e RPC contro il database live.
+- [ ] **SQL RPC applicato dall’utente:** `docs/sickfit-domain.sql` contiene cinque RPC transazionali `SECURITY INVOKER`; readback catalogo conferma oggetti e prerequisiti osservati. Non rilanciare alla cieca; ricontrollare diff/target e testare le RPC in ambiente isolato.
+- [ ] **Contratto:** `docs/api-contract.md` e README Edge descrivono payload/DTO v1. Riconciliare contratto, Edge Function, RPC e client; API non live.
+- [ ] **Frontend web:** dominio passa al client Edge; Auth resta Supabase diretto. Presenti verifica username, versionamento e archiviazione schede, sessioni incomplete, dettagli storico, verifica di salvataggi incerti e registrazione di ripetizioni/carico/durata/note. Ricontrollare flussi e accesso RLS a `profiles`.
+- [ ] **Mobile:** schermate Expo per Auth, schede/editor, allenamento, storico/dettaglio e impostazioni; sessione Auth su SecureStore, deep link `sickfit` e registrazione di ripetizioni/carico/durata/note. Una sessione vuota può essere ripresa se la versione esatta è ancora disponibile; il draft non salvato resta solo in memoria e non si recupera dopo la chiusura. Verificare implementazione, navigazione, accessibilità, callback email e compatibilità iOS/Android.
+**Confermato in questo working tree:** nessun `AGENTS.md` modificato; nessun commit, push o deploy eseguito.
 
 ## Da fare
 
 ### Backend/API
 
-- [ ] Definire il catalogo delle operazioni di dominio e il contratto API versionato, inclusi schemi input/output ed errori; decidere se documentarlo con OpenAPI.
-- [ ] Definire e verificare il flusso JWT Supabase e l’accesso per utente con RLS; non usare la service-role key come credenziale generale per operazioni utente.
-- [ ] Progettare e implementare le Edge Functions di dominio, con validazione, autorizzazione, rate limiting, logging sicuro e gestione coerente degli errori.
+- [ ] Primo giro di revisione statica e correzioni eseguiti; ripetere la revisione indipendentemente prima del rilascio. Rate limiting/quote restano da definire e CORS da verificare nell’ambiente reale prima dell’esposizione.
 - [ ] Rivedere la funzione locale `login-with-username` (rate limiting, CORS, gestione segreti e tentativi) prima di qualsiasi esposizione; non risulta deployata né verificata.
-- [ ] Pianificare il passaggio graduale delle query del frontend all’API, senza doppie scritture e preservando lo storico delle versioni piano.
+- [ ] Il primo tentativo di introspezione del 21 novembre 2026 è fallito; un successivo readback in sola lettura ha verificato schema/colonne, constraint/FK, policy owner-scoped, privilegi effettivi e trigger. Il trigger Auth crea `profiles` dal metadata `username`; restano da verificare policy/grants del profilo, redirect `Site URL`/allowlist, consegna email SMTP e isolamento con account distinti.
+- [ ] Il readback ha confermato i privilegi effettivi `UPDATE training_plans` e `DELETE workout_sessions`; testare archive/cancel via RPC. Gli esempi commentati nello SQL non sono stati eseguiti.
+- [ ] SQL già applicato dall’utente; non ridistribuire/rilanciare alla cieca. Dopo test/review autorizzati, distribuire `domain` e leggere il target aggiornato per verifica.
 
 ### Mobile
 
-- [ ] Installare le dipendenze, generare il lockfile e verificare lo scaffold in un ambiente di sviluppo autorizzato; tali attività non sono state eseguite in questo checkout.
-- [ ] Definire identificatori bundle/package e schema/deep link per Supabase Auth su iOS e Android.
-- [ ] Implementare autenticazione, sessione sicura, navigazione e schermate funzionali contro lo stesso backend/dati.
+- [ ] Installare dipendenze e generare lockfile in ambiente autorizzato; verificare redirect `sickfit://auth/callback` e identificatori bundle/package.
 - [ ] Verificare l’app su dispositivi/simulatori autorizzati prima di qualsiasi distribuzione.
 
 ### Rilascio e verifica
 
-- [ ] Riconfermare in sola lettura lo stato live di Auth, RLS, grants e schema prima di migrazioni o cutover.
 - [ ] Definire ambienti isolati, CI/deploy separati per componente, monitoraggio e procedura di rollback.
-- [ ] Eseguire test e build dopo la riorganizzazione in un ambiente autorizzato; non sono stati eseguiti in questa fase.
+- [ ] In ambiente autorizzato, eseguire typecheck/test/build separatamente, poi test integrazione con due account (Auth, RLS cross-account, CRUD/versioni, workout, sessioni incomplete, storico, rete/timeout/doppio invio). Questi controlli non sono stati eseguiti.
+- [ ] Riconciliare README, `SCHEMA.md`, decisioni e wiki con i sorgenti e lo stato reale; il presente aggiornamento documentale deve essere ricontrollato prima di considerarlo definitivo.
+- [ ] Dopo i ricontrolli aggiornare questo TODO distinguendo le verifiche riuscite da quelle ancora aperte.
 
 ## Vincoli
 
 - Non creare o migrare utenti/database; Supabase resta l’unico provider concordato.
-- Nessuna modifica DB, policy, Auth, deploy, commit o push senza autorizzazione esplicita.
-- Il TODO registra lo stato locale e non certifica che funzioni, configurazioni o servizi remoti siano operativi.
+- Nessun segreto in client/docs; nessuna modifica database/policy/Auth, deploy, commit o push senza autorizzazione esplicita e verifica del target.
+- Il TODO registra la presenza di sorgenti locali e non certifica runtime, sicurezza completa o servizi remoti operativi.

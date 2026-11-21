@@ -35,6 +35,7 @@ export interface EditableSet {
   position: number
   reps: string
   weightKg: string
+  durationSeconds: string
   loadBasis: LoadBasis
   notes: string[]
 }
@@ -44,6 +45,7 @@ export function createEmptySet(position: number): EditableSet {
     position,
     reps: '',
     weightKg: '',
+    durationSeconds: '',
     loadBasis: 'per_side',
     notes: [''],
   }

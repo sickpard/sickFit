@@ -39,6 +39,7 @@ describe('serie dell’allenamento', () => {
       position: 1,
       reps: '',
       weightKg: '',
+      durationSeconds: '',
       loadBasis: 'per_side',
       notes: [''],
     })

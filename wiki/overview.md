@@ -1,6 +1,6 @@
 # SickFit — panoramica
 
-**Verificata:** 2026-11-19. Consultare `README.md` e `AGENTS.md` per stato e vincoli aggiornati.
+**Aggiornata:** 2026-11-21. Prima implementazione locale presente; ricontrollare attentamente secondo `docs/todo.md`. Non sono stati eseguiti test/build/runtime, SQL remoto o deploy.
 
 ## Prodotto
 
@@ -8,13 +8,13 @@ SickFit è una PWA mobile-first in italiano per gestire schede di allenamento, r
 
 ## Architettura
 
-- **Frontend:** `frontend/`, Vue 3, TypeScript e Vite; al momento presenta l’app e accede direttamente a Supabase.
+- **Frontend:** `frontend/`, Vue 3, TypeScript e Vite; Auth diretto a Supabase, operazioni di dominio tramite invocazione locale dell’Edge Function `domain`.
 - **Autenticazione e dati:** Supabase Auth e PostgreSQL con RLS.
-- **Backend:** direzione concordata — Supabase Edge Functions in TypeScript/Deno. `backend/supabase/functions/login-with-username` è sorgente locale preesistente, non risulta deployata o provata e non costituisce ancora un’API condivisa di dominio.
-- **Mobile:** direzione concordata — Expo/React Native per Android e iOS. `mobile/` contiene ora uno scaffold TypeScript minimale con schermata segnaposto; dipendenze non installate, autenticazione e funzioni di prodotto non implementate.
+- **Backend:** `backend/supabase/functions/domain` espone nel sorgente locale il contratto v1; `login-with-username` resta legacy. Nessuna funzione è attestata come deployata/provata.
+- **Mobile:** `mobile/` contiene schermate Expo/React Native TypeScript per Auth, schede, sessioni e storico; dipendenze non installate, lockfile non presente, runtime non verificato.
 - **PWA:** manifest e icone sono presenti; disponibilità installabile dipende dall’hosting HTTPS e dal browser.
 
-La struttura è stata organizzata come monorepo (`frontend/`, `backend/`, `mobile/`, `docs/`, `wiki/`) senza creare un secondo provider: il database e l’identità restano Supabase. La direzione per backend e mobile è concordata; l’API condivisa e le funzioni applicative mobile non sono ancora implementate. Le attività aperte sono nel [TODO](../docs/todo.md).
+La struttura resta un monorepo, con Supabase come unico provider. Il contratto condiviso e il SQL RPC sono descritti in [`docs/api-contract.md`](../docs/api-contract.md) e [`docs/sickfit-domain.sql`](../docs/sickfit-domain.sql). Il SQL è stato eseguito nel progetto SickFit il 21 novembre 2026; le funzioni sono presenti secondo il readback catalogo, ma non sono ancora state invocate e l’Edge Function non è distribuita. Le attività da ricontrollare sono nel [TODO](../docs/todo.md).
 
 ## Funzioni presenti secondo la documentazione di progetto
 
@@ -22,7 +22,7 @@ Registrazione/accesso, schede con giorni ed esercizi, scelta manuale del giorno,
 
 ## Modello dati
 
-Il progetto Supabase espone 10 tabelle applicative nello schema `public`; RLS risulta abilitata su tutte. L’utente ha confermato la configurazione di policy, grants e trigger, ma le espressioni live di policy e grants non sono state riportate nell’introspezione utilizzata per la documentazione. Dettagli verificati, relazioni e limiti noti sono nel [riferimento SCHEMA.md](../SCHEMA.md). Non eseguire modifiche DB o deploy senza autorizzazione esplicita.
+La lettura catalogo del 21 novembre 2026 ha verificato RLS abilitata e policy owner-scoped sulle nove tabelle di dominio, oltre ai privilegi tabellari effettivi richiesti e alle funzioni RPC. Il readback non ha testato l’isolamento con account reali né l’esecuzione delle RPC. Dettagli e limiti sono nel [riferimento SCHEMA.md](../SCHEMA.md).
 
 ## Vincoli operativi
 

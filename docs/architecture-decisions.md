@@ -1,6 +1,6 @@
 # Decisioni architetturali SickFit
 
-**Aggiornato:** 19 novembre 2026. Decisioni concordate in chat; nessun provider o database remoto modificato.
+**Aggiornato:** 21 novembre 2026. La direzione resta Supabase/Expo. Prima implementazione locale presente ma da ricontrollare; nessun provider cambiato. L’utente ha applicato le RPC SQL al database SickFit; la funzione Edge non è distribuita.
 
 ## Decisioni confermate
 
@@ -13,18 +13,18 @@
 ## Stato implementato in questo checkout
 
 - La PWA è stata spostata in `frontend/` con la sua configurazione e il lockfile. Vite legge le variabili d’ambiente dalla root del monorepo.
-- La configurazione Supabase e la Edge Function locale esistente sono in `backend/supabase/`.
-- `backend/supabase/functions/login-with-username` è solo sorgente preesistente: non è attestata come deployata o provata e non costituisce l’API applicativa condivisa.
-- `mobile/` contiene un scaffold Expo/React Native TypeScript iniziale e una schermata segnaposto. I pacchetti non sono stati installati, il lockfile non è stato generato e non sono stati creati file nativi.
+- `backend/supabase/functions/domain` contiene il sorgente locale dell’API v1 condivisa; `login-with-username` resta legacy. Nessuna funzione è attestata come deployata/provata.
+- `docs/sickfit-domain.sql` definisce RPC invoker per le scritture atomiche; l’utente l’ha eseguita il 21 novembre 2026. Il readback catalogo ha confermato funzioni, RLS/policy e privilegi, senza test di esecuzione.
+- Frontend e mobile contengono client UI per il contratto condiviso. Mobile dichiara dipendenze ma non ha lockfile e non è stato compilato/testato.
 
-## Prossime decisioni tecniche da definire prima dell’API
+## Verifiche tecniche ancora necessarie
 
-1. Elenco degli endpoint e delle operazioni di dominio da spostare dal client.
-2. Strategia di versione e forma del contratto API (per esempio OpenAPI).
-3. Modalità per propagare e validare la sessione Supabase Auth nelle Edge Functions e garantire RLS; evitare uso generalizzato della service-role key.
-4. Sequenza di passaggio dal client Supabase diretto alle API, senza doppie scritture.
-5. Gestione dei redirect/deep link Auth per web, Android e iOS.
-6. Ambienti di test isolati, criteri di rollback e pipeline CI/deploy indipendenti per componente.
+1. Riconciliare contratto, codice Edge, RPC SQL e client web/mobile.
+2. Verificare schema live, RLS/grants, FK e trigger; la lettura live non è riuscita.
+3. Testare concorrenza e atomicità RPC in database isolato, poi con due account distinti.
+4. Verificare Auth redirect/deep link e sessione sicura su web, iOS e Android.
+5. Definire rate limiting/quote, ambienti, pipeline e rollback prima di distribuire.
+6. Consultare [`todo.md`](./todo.md) per ricontrolli obbligatori e stato delle verifiche.
 
 ## Vincoli
 

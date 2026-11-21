@@ -1,10 +1,10 @@
 # SickFit
 
-Monorepo SickFit per web, backend condiviso e futura app mobile. Il frontend attuale è una PWA mobile-first Vue 3 + TypeScript + Vite; usa Supabase Auth e Postgres con RLS. La direzione concordata è Supabase Edge Functions per il backend e Expo/React Native per il client mobile; questi componenti sono ancora in fase iniziale.
+Monorepo SickFit: PWA web Vue 3 + TypeScript + Vite, Supabase Edge Function TypeScript/Deno e client nativo Expo/React Native. Nel working tree è presente una prima implementazione locale dei tre componenti; non è stata compilata, testata o collegata a un endpoint remoto.
 
 ## Stato
 
-Prima iterazione locale: UI italiana per registrazione/accesso, creazione di schede con più giorni ed esercizi, scelta manuale del giorno, registrazione di esercizi/serie/note e vista dello storico. Tema chiaro/scuro selezionabile, con preferenza salvata sul dispositivo e scelta iniziale basata sul tema del sistema. L’app non usa dati demo e non conserva sessioni offline.
+**Stato da ricontrollare attentamente:** web e mobile hanno UI per Auth, schede/versioni, sessioni e storico; il client web/mobile usa il contratto locale `domain`. L’Edge Function, l’API e il SQL sono soltanto sorgenti locali/proposti. Non sono stati eseguiti test, build, runtime, DDL né deploy. Vedi [TODO](./docs/todo.md) per limiti e verifiche ancora necessarie.
 
 ## Backlog e verifica locale
 
@@ -16,14 +16,14 @@ Prima iterazione locale: UI italiana per registrazione/accesso, creazione di sch
 
 Verifiche locali documentate prima della riorganizzazione, su SickPC: `pnpm test` — 5 test superati; `pnpm build` — completata. `npm install` non è riuscito per un errore interno di npm (`Cannot read properties of null (reading 'edgesOut')`); `pnpm install` è riuscito e ha creato `pnpm-lock.yaml`. Queste verifiche non sono state ripetute dopo lo spostamento in `frontend/`. Nessun deploy o test d’integrazione Supabase eseguito. L’integrazione account/RLS richiede account di test distinti e resta da verificare.
 
-Il login a tre campi richiede anche la Edge Function sotto `backend/supabase/functions/login-with-username`, che è solo sorgente locale e non è stata deployata.
+Il login web/mobile a tre campi usa Auth Supabase diretto e verifica il profilo autenticato sotto RLS; l’accesso al profilo va provato contro le policy effettive. `login-with-username` resta sorgente locale legacy e non è necessario per il nuovo flusso.
 
 
 ## Struttura del monorepo
 
-- `frontend/` — PWA Vue esistente; dipendenze e `pnpm-lock.yaml` del frontend restano locali a questa app.
-- `backend/supabase/` — configurazione Supabase e sorgente locale della Edge Function esistente; non equivale a un’API di dominio già implementata.
-- `mobile/` — scaffold Expo/React Native TypeScript con schermata iniziale segnaposto; autenticazione, navigazione e schermate funzionali restano da implementare.
+- `frontend/` — PWA Vue; dipendenze e `pnpm-lock.yaml` restano locali a questa app.
+- `backend/supabase/` — configurazione e sorgenti locali delle Edge Functions `login-with-username` e `domain`; nessuna è attestata come distribuita.
+- `mobile/` — client Expo/React Native con sorgenti per le schermate principali; dipendenze non installate, lockfile mobile assente, build/runtime non verificati.
 - `docs/` — decisioni architetturali.
 - `docs/todo.md` — attività aperte e stato dei prossimi passi.
 - `wiki/` — documentazione funzionale e tecnica.
@@ -44,9 +44,9 @@ Non inserire mai nel frontend una chiave `sb_secret` o `service_role`. I file `.
 
 ## Supabase
 
-Le tabelle e le policy RLS sono state create nel progetto Supabase `sickfit`. Il file `backend/supabase/functions/login-with-username/index.ts` implementa il controllo della coppia username/email e poi delega la verifica della password a Supabase Auth. La funzione richiede le variabili server-side `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` (oppure `SUPABASE_ANON_KEY`) e `SUPABASE_SERVICE_ROLE_KEY`; non committarle e non inserirle nel frontend.
+Il 21 novembre 2026 l’utente ha eseguito `docs/sickfit-domain.sql` nel progetto Supabase SickFit. Una successiva lettura del catalogo ha confermato le cinque funzioni RPC `SECURITY INVOKER`, RLS e policy owner-scoped sulle nove tabelle di dominio e i privilegi tabellari effettivi richiesti. Il comportamento delle RPC non è stato invocato/testato e l’Edge Function `domain` resta sorgente locale non distribuita; vedere [`docs/todo.md`](./docs/todo.md) per i controlli residui.
 
-La funzione è configurata con `verify_jwt = false` perché viene chiamata prima che l’utente abbia una sessione. La revisione locale rileva che manca un rate limiting applicativo; prima dell’esposizione pubblica servono una protezione contro tentativi ripetuti, la verifica della configurazione CORS (`SICKFIT_ALLOWED_ORIGINS`) e un test controllato. Non è stata distribuita né provata.
+`login-with-username` è ancora configurata con `verify_jwt = false` ed è legacy; la revisione locale segnala che mancano protezioni contro tentativi ripetuti. `domain` è configurata con `verify_jwt = true`. Entrambe restano non distribuite/non provate. Prima di qualsiasi deploy verificare CORS (`SICKFIT_ALLOWED_ORIGINS`), rate limiting/quote, RLS/grants e flussi Auth.
 
 ## PWA
 
@@ -61,4 +61,5 @@ La PWA Vue è stata spostata in `frontend/` nella repository esistente. La crono
 - [AGENTS.md](./AGENTS.md) contiene le istruzioni operative vincolanti per questa repository.
 - [SCHEMA.md](./SCHEMA.md) documenta il modello dati e i contratti API osservati, distinguendo i dati verificati dalle lacune.
 - [TODO del progetto](./docs/todo.md) registra attività completate e ancora aperte.
+- [Contratto API locale v1](./docs/api-contract.md) e [SQL RPC](./docs/sickfit-domain.sql) (eseguito nel progetto SickFit il 21 novembre 2026; readback catalogo, senza test runtime).
 - La [wiki SickFit](./wiki/index.md) raccoglie panoramica e collegamenti alla documentazione di progetto.
