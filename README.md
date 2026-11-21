@@ -4,7 +4,7 @@ Monorepo SickFit: PWA web Vue 3 + TypeScript + Vite, Supabase Edge Function Type
 
 ## Stato
 
-**Stato da ricontrollare attentamente:** web e mobile hanno UI per Auth, schede/versioni, sessioni e storico; il client web/mobile usa il contratto locale `domain`. L’Edge Function, l’API e il SQL sono soltanto sorgenti locali/proposti. Non sono stati eseguiti test, build, runtime, DDL né deploy. Vedi [TODO](./docs/todo.md) per limiti e verifiche ancora necessarie.
+**Stato da ricontrollare attentamente:** web e mobile hanno UI per Auth, schede/versioni, sessioni e storico; i client usano il contratto locale `domain`. L’utente ha installato le dipendenze web, avviato Vite e confermato il flusso signup/email. Lo script SQL è stato eseguito dall’utente; l’Edge Function resta sorgente locale non distribuita. In questa revisione non sono stati eseguiti test, typecheck o build; il runtime mobile non è verificato. Vedi [TODO](./docs/todo.md) per i controlli aperti.
 
 ## Backlog e verifica locale
 
@@ -27,7 +27,7 @@ Il login web/mobile a tre campi usa Auth Supabase diretto e verifica il profilo 
 - `docs/` — decisioni architetturali.
 - `docs/todo.md` — attività aperte e stato dei prossimi passi.
 - `wiki/` — documentazione funzionale e tecnica.
-- `SCHEMA.md` — riferimento canonico del modello dati e dei contratti Supabase osservati.
+- `SCHEMA.md` — regole editoriali della wiki; il modello dati/API canonico è `docs/data-and-api-schema.md`.
 
 Il file `.env.local`, se usato, resta nella root del monorepo; Vite carica la configurazione dalla root tramite `frontend/vite.config.ts`. Non copiare valori segreti in `.env.example` o nella documentazione.
 
@@ -59,7 +59,9 @@ La PWA Vue è stata spostata in `frontend/` nella repository esistente. La crono
 ## Documentazione
 
 - [AGENTS.md](./AGENTS.md) contiene le istruzioni operative vincolanti per questa repository.
-- [SCHEMA.md](./SCHEMA.md) documenta il modello dati e i contratti API osservati, distinguendo i dati verificati dalle lacune.
+- [SCHEMA.md](./SCHEMA.md) definisce lo schema editoriale della wiki; il [contratto dati/API](./docs/data-and-api-schema.md) distingue fatti verificati e lacune.
 - [TODO del progetto](./docs/todo.md) registra attività completate e ancora aperte.
 - [Contratto API locale v1](./docs/api-contract.md) e [SQL RPC](./docs/sickfit-domain.sql) (eseguito nel progetto SickFit il 21 novembre 2026; readback catalogo, senza test runtime).
-- La [wiki SickFit](./wiki/index.md) raccoglie panoramica e collegamenti alla documentazione di progetto.
+- La [wiki SickFit](./wiki/index.md) raccoglie panoramica, pagine prodotto e confini dei componenti.
+- Schemi tecnici: [frontend](./docs/components/frontend/SCHEMA.md), [backend](./docs/components/backend/SCHEMA.md), [mobile](./docs/components/mobile/SCHEMA.md).
+- [Schema editoriale del manuale utente](./wiki/user-manual-schema.md).

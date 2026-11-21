@@ -1,6 +1,6 @@
 # Contratto applicativo SickFit — v1
 
-Questa pagina descrive il contratto **locale** condiviso da PWA, app Expo ed Edge Function `domain`. Non attesta deploy, test con account reali o correttezza delle policy del progetto Supabase. Lo schema preesistente è documentato in [SCHEMA.md](../SCHEMA.md); le funzioni SQL aggiuntive sono in [sickfit-domain.sql](./sickfit-domain.sql).
+Questa pagina descrive il contratto **locale** condiviso da PWA, app Expo ed Edge Function `domain`. Non attesta deploy, test con account reali o correttezza delle policy del progetto Supabase. Il modello dati è documentato in [data-and-api-schema.md](./data-and-api-schema.md); le funzioni SQL aggiuntive sono in [sickfit-domain.sql](./sickfit-domain.sql).
 
 ## Trasporto e autenticazione
 

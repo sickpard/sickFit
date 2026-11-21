@@ -12,7 +12,7 @@
 - Non salvare credenziali o dati sensibili in chiaro. Non collegare l’app direttamente al database con credenziali privilegiate.
 
 ## Operatività
-- Questa directory contiene uno scaffold Expo iniziale; dipendenze non installate, quindi non è ancora verificato come eseguibile.
+- Questa directory contiene schermate Expo/React Native per i flussi principali; le dipendenze mobile non risultano installate e il lockfile, la build e il runtime non sono verificati in questo checkout.
 - Per rispettare i vincoli del checkout, non installare toolchain o dipendenze, generare build native o avviare runtime sulla VM.
 - Verificare Auth, rinnovo sessione e deep link su entrambe le piattaforme in un ambiente autorizzato prima del rilascio.
 - Dopo l’autorizzazione e in un ambiente di sviluppo idoneo, generare/aggiornare lockfile e verificare il progetto; fino ad allora non dichiarare build o runtime funzionanti.

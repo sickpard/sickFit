@@ -13,15 +13,15 @@ Queste istruzioni valgono per l’intera repository SickFit e prevalgono sulle c
 
 - SickFit è una PWA mobile-first in italiano, online-only, basata su Vue 3, TypeScript e Vite, con Supabase Auth/PostgreSQL.
 - `frontend/` contiene la PWA Vue, i sorgenti, la configurazione Vite e il lockfile del frontend; verificare sempre il tree prima di riferire un simbolo.
-- `backend/supabase/` contiene configurazione Supabase e sorgenti locali delle Edge Functions. Non dichiararle distribuite o verificate in runtime senza evidenza.
-- `mobile/` contiene uno scaffold iniziale Expo/React Native con manifest e schermata segnaposto; dipendenze, build e runtime non sono verificati.
-- La UI web usa tema chiaro/scuro. Non introdurre SQLite, server residenti sulla VM, bot, funzionalità offline o sincronizzazione. L’app mobile nativa è una direzione concordata; seguire `docs/architecture-decisions.md` e `docs/todo.md`. La scorciatoia per il workout del giorno è già documentata come implementata.
+- `backend/supabase/` contiene configurazione e sorgenti locali delle Edge Functions `domain` e `login-with-username`. Non dichiararle distribuite o verificate in runtime senza evidenza.
+- `mobile/` contiene un client Expo/React Native con schermate per Auth, schede, sessioni e storico; dipendenze, build e runtime non sono verificati.
+- La UI web usa tema chiaro/scuro. Non introdurre SQLite, server residenti sulla VM, bot, funzionalità offline o sincronizzazione. L’app mobile nativa è presente nel tree con schermate funzionali ma non è verificata in build/runtime; seguire `docs/architecture-decisions.md` e `docs/todo.md`. La scorciatoia per il workout del giorno è già documentata come implementata.
 
 ## 3. Schema dati e integrità
 
-- `SCHEMA.md` alla root è il riferimento canonico del modello dati e dei contratti API osservati. Descrive esclusivamente fatti verificati e separa requisiti di prodotto, metadati DB e lacune.
-- Prima di modificare query, tipi, persistenza, autenticazione o funzioni Supabase, confronta l’implementazione con `SCHEMA.md` e con le migrazioni/sorgenti realmente disponibili.
-- Ogni modifica autorizzata a tabelle, colonne, default, vincoli, relazioni, indici, RLS/grants, trigger o contratti API richiede l’aggiornamento contestuale di `SCHEMA.md` e della wiki. Non inventare DDL o comportamento non esposto dalle fonti; marca i dati ignoti come non verificati.
+- `SCHEMA.md` alla root definisce le regole editoriali della wiki. Il riferimento canonico per dati e contratti API è `docs/data-and-api-schema.md`.
+- Prima di modificare query, tipi, persistenza, autenticazione o funzioni Supabase, confronta l’implementazione con `docs/data-and-api-schema.md` e con le migrazioni/sorgenti realmente disponibili.
+- Ogni modifica autorizzata a tabelle, colonne, default, vincoli, relazioni, indici, RLS/grants, trigger o contratti API richiede l’aggiornamento contestuale di `docs/data-and-api-schema.md` e della wiki. Non inventare DDL o comportamento non esposto dalle fonti; marca i dati ignoti come non verificati.
 - L’isolamento per utente deve dipendere da RLS, non solo da filtri UI. Non modificare policy, grants, database o deploy senza autorizzazione esplicita.
 - Le sessioni storiche devono restare associate alla versione di piano originaria. Non alterare gli allenamenti passati quando cambiano le schede.
 - Il numero di serie prescritto è indicativo; le registrazioni possono avere più o meno serie o esercizi saltati. Carichi in kg, senza conversioni implicite.
@@ -44,11 +44,11 @@ Queste istruzioni valgono per l’intera repository SickFit e prevalgono sulle c
 ## 6. Documentazione e wiki
 
 - `README.md`: stato, setup e limiti operativi del monorepo.
-- `docs/`: decisioni architetturali e documenti di pianificazione.
+- `docs/`: decisioni, pianificazione, schema dati/API e schemi tecnici dei componenti.
 - `docs/todo.md`: stato delle attività e dei prossimi passi.
-- `SCHEMA.md`: modello dati, vincoli, relazioni, sicurezza osservata, accesso dati e contratti API.
-- `wiki/index.md`: indice della wiki SickFit; `wiki/overview.md`: panoramica funzionale/tecnica.
-- Prima di modificare documentazione, leggi `SCHEMA.md`, `wiki/index.md`, le pagine target e le sorgenti pertinenti. Aggiorna la wiki di SickFit e gli indici/link coinvolti nella stessa attività.
+- `SCHEMA.md`: regole editoriali della wiki; `docs/data-and-api-schema.md`: modello dati, vincoli, relazioni, sicurezza osservata, accesso dati e contratti API.
+- `wiki/index.md`: indice; `wiki/overview.md`: panoramica del monorepo; le aree prodotto e componenti sono sotto `wiki/`.
+- Prima di modificare documentazione, leggi `SCHEMA.md`, il contratto dati/API, `wiki/index.md`, le pagine target e le sorgenti pertinenti. Aggiorna la wiki di SickFit e gli indici/link coinvolti nella stessa attività.
 - Dopo modifiche rilevanti al progetto aggiorna anche la voce SickFit in `~/wiki/progetti.md`; aggiorna TODO solo quando cambia lo stato di un’attività aperta.
 - Distingui comportamento implementato, requisiti, esempi e ipotesi. Non inventare dati di prodotto, capacità, versioni, autori, policy o conformità normativa.
 

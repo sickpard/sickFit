@@ -1,9 +1,9 @@
 # AGENTS.md — backend SickFit
 
 ## Decisioni e confini
-- Backend previsto: Supabase Edge Functions in TypeScript/Deno, collegato esclusivamente al progetto Supabase SickFit esistente.
+- Backend: Supabase Edge Functions in TypeScript/Deno, collegate esclusivamente al progetto Supabase SickFit esistente.
 - `supabase/` contiene configurazione e sorgenti locali delle funzioni. Non presumere che una funzione locale sia deployata o verificata.
-- La funzione `login-with-username` è un flusso pre-autenticato esistente, non l’API di dominio condivisa.
+- `domain` contiene il contratto locale condiviso per le operazioni di prodotto; `login-with-username` è un flusso pre-autenticato legacy, non l’API di dominio.
 - Non introdurre un secondo database, identity provider o account utente.
 
 ## Sicurezza
@@ -14,6 +14,6 @@
 - Non modificare database, policy, grants, impostazioni Auth o deploy senza autorizzazione esplicita.
 
 ## Verifiche e documentazione
-- Confrontare cambi a query o contratto con `../SCHEMA.md` e `../docs/architecture-decisions.md`.
+- Confrontare cambi a query o contratto con `../docs/data-and-api-schema.md`, `../docs/api-contract.md` e `../docs/architecture-decisions.md`.
 - Su questa macchina sono ammesse solo verifiche statiche leggere; niente installazioni, test, build o runtime.
 - Aggiornare README, decisioni e wiki quando cambia lo stato effettivo. Nessun commit o push senza richiesta esplicita.

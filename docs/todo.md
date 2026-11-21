@@ -1,6 +1,6 @@
 # TODO — SickFit
 
-**Aggiornato:** 21 novembre 2026. L’utente ha eseguito `docs/sickfit-domain.sql` nel progetto Supabase SickFit. Un successivo readback catalogo in sola lettura ha confermato cinque RPC `SECURITY INVOKER`, RLS/policy owner-scoped sulle nove tabelle di dominio, privilegi effettivi richiesti, colonne/constraint/FK e trigger `updated_at`. **RICONTROLLO ATTENTO OBBLIGATORIO:** verificare componente per componente cosa è stato effettivamente completato e cosa no; la presenza dei sorgenti o delle funzioni non prova comportamento runtime, isolamento o integrazione. Nessuna RPC è stata invocata e l’Edge Function non è stata distribuita; installazione, test, build e runtime restano non eseguiti.
+**Aggiornato:** 21 novembre 2026. L’utente ha eseguito `docs/sickfit-domain.sql` nel progetto Supabase SickFit. Un successivo readback catalogo in sola lettura ha confermato cinque RPC `SECURITY INVOKER`, RLS/policy owner-scoped sulle nove tabelle di dominio, privilegi effettivi richiesti, colonne/constraint/FK e trigger `updated_at`. L’utente ha inoltre installato le dipendenze web, avviato Vite e confermato il flusso signup/email. **RICONTROLLO ATTENTO OBBLIGATORIO:** verificare componente per componente cosa è stato effettivamente completato e cosa no; la presenza dei sorgenti o delle funzioni non prova comportamento runtime, isolamento o integrazione completa. Nessuna RPC è stata invocata, l’Edge Function non è stata distribuita, e test/typecheck/build e runtime mobile restano non eseguiti.
 
 ## Implementato nel tree — DA RICONTROLLARE ATTENTAMENTE
 
@@ -9,7 +9,8 @@
 - [ ] **Contratto:** `docs/api-contract.md` e README Edge descrivono payload/DTO v1. Riconciliare contratto, Edge Function, RPC e client; API non live.
 - [ ] **Frontend web:** dominio passa al client Edge; Auth resta Supabase diretto. Presenti verifica username, versionamento e archiviazione schede, sessioni incomplete, dettagli storico, verifica di salvataggi incerti e registrazione di ripetizioni/carico/durata/note. Ricontrollare flussi e accesso RLS a `profiles`.
 - [ ] **Mobile:** schermate Expo per Auth, schede/editor, allenamento, storico/dettaglio e impostazioni; sessione Auth su SecureStore, deep link `sickfit` e registrazione di ripetizioni/carico/durata/note. Una sessione vuota può essere ripresa se la versione esatta è ancora disponibile; il draft non salvato resta solo in memoria e non si recupera dopo la chiusura. Verificare implementazione, navigazione, accessibilità, callback email e compatibilità iOS/Android.
-**Confermato in questo working tree:** nessun `AGENTS.md` modificato; nessun commit, push o deploy eseguito.
+- [x] [DA RICONTROLLARE ATTENTAMENTE] **Riparazione merge documentale:** ripristinata la gerarchia wiki introdotta dai commit `84d269e` e `df53b98`; separato lo schema editoriale root dal contratto dati/API aggiornato e ricreati schemi/pagine componenti coerenti con il tree SickFit attuale. Ricontrollare puntualmente contenuti, link e compatibilità di ogni pagina prima di considerarli definitivi.
+**Confermato in questo working tree:** gli `AGENTS.md` root e dei componenti sono stati allineati alla struttura documentale e allo stato verificato. Nessun commit, push o deploy eseguito.
 
 ## Da fare
 
@@ -30,7 +31,7 @@
 
 - [ ] Definire ambienti isolati, CI/deploy separati per componente, monitoraggio e procedura di rollback.
 - [ ] In ambiente autorizzato, eseguire typecheck/test/build separatamente, poi test integrazione con due account (Auth, RLS cross-account, CRUD/versioni, workout, sessioni incomplete, storico, rete/timeout/doppio invio). Questi controlli non sono stati eseguiti.
-- [ ] Riconciliare README, `SCHEMA.md`, decisioni e wiki con i sorgenti e lo stato reale; il presente aggiornamento documentale deve essere ricontrollato prima di considerarlo definitivo.
+- [ ] Ricontrollare attentamente README, `SCHEMA.md`, `docs/data-and-api-schema.md`, decisioni e tutte le pagine wiki rispetto ai sorgenti e allo stato reale; l’allineamento strutturale è stato ripristinato, ma i contenuti non sono ancora revisionati/approvati dall’utente.
 - [ ] Dopo i ricontrolli aggiornare questo TODO distinguendo le verifiche riuscite da quelle ancora aperte.
 
 ## Vincoli

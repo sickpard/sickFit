@@ -1,29 +1,44 @@
-# SickFit — panoramica
+---
+title: "SickFit — panoramica del monorepo"
+status: active
+role: application
+source:
+  references:
+    - part: other
+      path: README.md
+    - part: configuration
+      path: frontend/package.json
+    - part: configuration
+      path: backend/supabase/config.toml
+    - part: configuration
+      path: mobile/package.json
+    - part: other
+      path: docs/api-contract.md
+---
 
-**Aggiornata:** 2026-11-21. Prima implementazione locale presente; ricontrollare attentamente secondo `docs/todo.md`. Non sono stati eseguiti test/build/runtime, SQL remoto o deploy.
+## Short Description
 
-## Prodotto
+SickFit è un monorepo con client web e nativo per la gestione di allenamenti, integrati con Supabase.
 
-SickFit è una PWA mobile-first in italiano per gestire schede di allenamento, registrare sessioni e consultare lo storico. L’app è online-only: non implementa service worker, uso offline o sincronizzazione. La UI include tema chiaro/scuro con preferenza persistente sul dispositivo.
+## Description
 
-## Architettura
+La PWA Vue e il client Expo/React Native includono schermate per autenticazione, schede, sessioni e storico. Supabase Auth gestisce l’identità; le operazioni di dominio sono descritte dal contratto locale v1 e dalla Edge Function `domain`. Il sorgente locale non prova deploy o corretto funzionamento runtime.
 
-- **Frontend:** `frontend/`, Vue 3, TypeScript e Vite; Auth diretto a Supabase, operazioni di dominio tramite invocazione locale dell’Edge Function `domain`.
-- **Autenticazione e dati:** Supabase Auth e PostgreSQL con RLS.
-- **Backend:** `backend/supabase/functions/domain` espone nel sorgente locale il contratto v1; `login-with-username` resta legacy. Nessuna funzione è attestata come deployata/provata.
-- **Mobile:** `mobile/` contiene schermate Expo/React Native TypeScript per Auth, schede, sessioni e storico; dipendenze non installate, lockfile non presente, runtime non verificato.
-- **PWA:** manifest e icone sono presenti; disponibilità installabile dipende dall’hosting HTTPS e dal browser.
+## Functional Characteristics
 
-La struttura resta un monorepo, con Supabase come unico provider. Il contratto condiviso e il SQL RPC sono descritti in [`docs/api-contract.md`](../docs/api-contract.md) e [`docs/sickfit-domain.sql`](../docs/sickfit-domain.sql). Il SQL è stato eseguito nel progetto SickFit il 21 novembre 2026; le funzioni sono presenti secondo il readback catalogo, ma non sono ancora state invocate e l’Edge Function non è distribuita. Le attività da ricontrollare sono nel [TODO](../docs/todo.md).
+- Gestisce schede di allenamento, versioni, sessioni e storico nei client locali.
+- È previsto l’uso online tramite Supabase; non è documentato un flusso offline o un service worker.
+- L’import Notion non è implementato.
+- Per stato e verifiche mancanti consultare il [TODO](../docs/todo.md).
 
-## Funzioni presenti secondo la documentazione di progetto
+## Interfaces And Protocols
 
-Registrazione/accesso, schede con giorni ed esercizi, scelta manuale del giorno, registrazione di esercizi/serie/note e visualizzazione dello storico. Il README documenta inoltre versionamento delle schede, recupero password, import JSON e scorciatoia per l’allenamento del giorno come funzionalità implementate; i flussi Supabase live restano da verificare. L’import Notion non è implementato.
+Auth usa Supabase direttamente; i dati di dominio passano dal contratto locale `POST /functions/v1/domain`. I dettagli sono in [`docs/api-contract.md`](../docs/api-contract.md) e [`docs/data-and-api-schema.md`](../docs/data-and-api-schema.md).
 
-## Modello dati
+## Dependencies And Relationships
 
-La lettura catalogo del 21 novembre 2026 ha verificato RLS abilitata e policy owner-scoped sulle nove tabelle di dominio, oltre ai privilegi tabellari effettivi richiesti e alle funzioni RPC. Il readback non ha testato l’isolamento con account reali né l’esecuzione delle RPC. Dettagli e limiti sono nel [riferimento SCHEMA.md](../SCHEMA.md).
+I componenti condividono il progetto Supabase. Le pagine del [prodotto](product/overview.md) e dei [componenti](components/overview.md) descrivono i confini; gli schemi DB/API e i limiti dell’introspezione sono documentati separatamente.
 
-## Vincoli operativi
+## Procedures
 
-`AGENTS.md` alla root contiene le istruzioni vincolanti per agenti e contributor. In questo intervento sono consentite solo verifiche statiche: non eseguire installazioni, test, build o avvio dell’app. Le verifiche runtime e la resa visiva restano da controllare in un ambiente autorizzato. Non inserire segreti nel frontend o nella documentazione; nessun commit o push senza richiesta esplicita.
+Per setup e vincoli operativi consultare [README](../README.md) e [AGENTS](../AGENTS.md). L’utente ha già avviato Vite e confermato signup/email; test, build, runtime mobile e deploy non sono attestati da questa revisione.
